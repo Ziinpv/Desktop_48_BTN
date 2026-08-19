@@ -34,10 +34,10 @@ let state = {
   ],
 
   customers: [
-    { id: 'KH01', name: 'Nguyễn Thị Lan Anh', phone: '0912345678', address: 'Quận 1, TP. Hồ Chí Minh', usedServices: ['DV01', 'DV04'] },
-    { id: 'KH02', name: 'Trần Văn Hùng', phone: '0987654321', address: 'Quận Bình Thạnh, TP. Hồ Chí Minh', usedServices: ['DV02', 'DV03', 'DV05'] },
-    { id: 'KH03', name: 'Phạm Quỳnh Nga', phone: '0905123987', address: 'Quận 3, TP. Hồ Chí Minh', usedServices: ['DV01'] },
-    { id: 'KH04', name: 'Lê Hoàng Nam', phone: '0934567890', address: 'Quận Phú Nhuận, TP. Hồ Chí Minh', usedServices: ['DV02', 'DV06'] }
+    { id: 'KH01', name: 'Nguyễn Thị Lan Anh', phone: '0912345678', address: 'Phường 2, TP. Đà Lạt', usedServices: ['DV01', 'DV04'] },
+    { id: 'KH02', name: 'Trần Văn Hùng', phone: '0987654321', address: 'Phường 8, TP. Đà Lạt', usedServices: ['DV02', 'DV03', 'DV05'] },
+    { id: 'KH03', name: 'Phạm Quỳnh Nga', phone: '0905123987', address: 'Phường 1, TP. Đà Lạt', usedServices: ['DV01'] },
+    { id: 'KH04', name: 'Lê Hoàng Nam', phone: '0934567890', address: 'Phường 9, TP. Đà Lạt', usedServices: ['DV02', 'DV06'] }
   ],
 
   rentals: [

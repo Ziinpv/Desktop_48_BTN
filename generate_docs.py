@@ -41,9 +41,9 @@ def create_document():
     # -------------------------------------------------------------
     p_univ = doc.add_paragraph()
     p_univ.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r1 = p_univ.add_run("TRƯỜNG ĐẠI HỌC BÁCH KHOA - ĐHQG TP.HCM\n")
+    r1 = p_univ.add_run("TRƯỜNG ĐẠI HỌC ĐÀ LẠT\n")
     r1.font.name = 'Times New Roman'; r1.font.size = Pt(13); r1.font.bold = True
-    r2 = p_univ.add_run("KHOA KHOA HỌC VÀ KỸ THUẬT MÁY TÍNH\n")
+    r2 = p_univ.add_run("KHOA CÔNG NGHỆ THÔNG TIN\n")
     r2.font.name = 'Times New Roman'; r2.font.size = Pt(12); r2.font.bold = True; r2.font.color.rgb = PRIMARY_COLOR
     r_div = p_univ.add_run("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n\n")
     r_div.font.color.rgb = MUTED_COLOR
@@ -94,7 +94,7 @@ def create_document():
 
     p_footer = doc.add_paragraph()
     p_footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    r_ft = p_footer.add_run("\n\n\n\nTP. HỒ CHÍ MINH, NĂM 2026")
+    r_ft = p_footer.add_run("\n\n\n\nĐÀ LẠT, NĂM 2026")
     r_ft.font.name = 'Times New Roman'; r_ft.font.size = Pt(11); r_ft.font.bold = True
 
     doc.add_page_break()
