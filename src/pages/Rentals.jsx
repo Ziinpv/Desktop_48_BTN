@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, Card, Checkbox, DatePicker, Form, Input, InputNumber, Modal, Select, Space, Table, App, Alert } from "antd";
+import { Button, Card, Checkbox, DatePicker, Drawer, Form, Input, InputNumber, Modal, Select, Space, Table, App, Alert } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 import api from "../services/api";
 import { errText, fmtDate, vnd } from "../utils/format";
 import StatusTag from "../components/StatusTag";
+import PaymentPanel from "../components/PaymentPanel";
 
 export default function Rentals() {
   const { t } = useTranslation();
@@ -15,6 +16,7 @@ export default function Rentals() {
   const [dresses, setDresses] = useState([]);
   const [status, setStatus] = useState("");
   const [open, setOpen] = useState(false);
+  const [payRow, setPayRow] = useState(null);
   const [form] = Form.useForm();
   const selected = Form.useWatch("dresses", form) || [];
 
@@ -93,10 +95,16 @@ export default function Rentals() {
           { title: "Hạn trả", dataIndex: "ngayTraDuKien", render: fmtDate },
           { title: "Bộ áo", dataIndex: "items", render: (items) => items.map((i) => i.maDress).join(", ") },
           { title: "Cọc", dataIndex: "tienCoc", render: vnd },
+          { title: "Còn lại", dataIndex: "conNo", render: vnd },
           { title: "TT", dataIndex: "trangThai", render: (v) => <StatusTag value={v} /> },
           {
             title: t("actions"),
-            render: (_, r) => r.trangThai !== "DA_TRA" ? <Button size="small" danger onClick={() => doReturn(r)}>Nhận trả</Button> : "Hoàn tất",
+            render: (_, r) => (
+              <Space>
+                <Button size="small" onClick={() => setPayRow(r)}>Sổ thu</Button>
+                {r.trangThai !== "DA_TRA" ? <Button size="small" danger onClick={() => doReturn(r)}>Nhận trả</Button> : "Hoàn tất"}
+              </Space>
+            ),
           },
         ]}
       />
@@ -139,6 +147,9 @@ export default function Rentals() {
           <Form.Item name="ghiChu" label="Ghi chú"><Input.TextArea /></Form.Item>
         </Form>
       </Modal>
+      <Drawer title={payRow ? `Sổ thanh toán · ${payRow.maHopDong}` : "Sổ thanh toán"} open={!!payRow} onClose={() => setPayRow(null)} width={720}>
+        {payRow && <PaymentPanel rental={payRow} onChanged={load} />}
+      </Drawer>
     </div>
   );
 }

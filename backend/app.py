@@ -24,14 +24,17 @@ from backend.routes import (  # noqa: E402
     dresses,
     export,
     lookup,
+    payments,
     rentals,
     reports,
     service_types,
     services,
     system,
 )
+from backend.config.migrate import ensure_schema  # noqa: E402
 from backend.seed import seed_if_empty  # noqa: E402
 from backend.services.backup import start_backup_scheduler  # noqa: E402
+from backend.services.payment_service import backfill_deposits  # noqa: E402
 from backend.services.rental_service import refresh_overdue  # noqa: E402
 from backend.config.database import SessionLocal  # noqa: E402
 
@@ -67,9 +70,10 @@ app.include_router(rentals.router)
 app.include_router(reports.router)
 app.include_router(lookup.router)
 app.include_router(export.router)
+app.include_router(payments.router)
 app.include_router(system.router)
 
-Base.metadata.create_all(bind=engine)
+ensure_schema()
 seed_if_empty()
 
 
@@ -98,11 +102,12 @@ async def unhandled(request: Request, exc: Exception):
 
 @app.on_event("startup")
 def on_startup():
-    Base.metadata.create_all(bind=engine)
+    ensure_schema()
     seeded = seed_if_empty()
     db = SessionLocal()
     try:
         refresh_overdue(db)
+        backfill_deposits(db)
     finally:
         db.close()
     start_backup_scheduler()

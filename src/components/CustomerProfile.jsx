@@ -72,6 +72,23 @@ export default function CustomerProfile({ customer }) {
         ]}
       />
 
+      <Typography.Title level={5} style={{ marginTop: 20 }}>Sổ thanh toán / biên lai</Typography.Title>
+      <Table
+        size="small"
+        rowKey={(r) => r.maGD || r.maBienLai}
+        pagination={false}
+        locale={{ emptyText: "Chưa có lần thu" }}
+        dataSource={customer.payments || []}
+        columns={[
+          { title: "Biên lai", dataIndex: "maBienLai" },
+          { title: "HĐ", dataIndex: "maHopDong" },
+          { title: "Loại", dataIndex: "loai" },
+          { title: "Hình thức", dataIndex: "phuongThuc" },
+          { title: "Số tiền", dataIndex: "soTien", render: vnd, align: "right" },
+          { title: "Còn lại", dataIndex: "soConLai", render: vnd, align: "right" },
+        ]}
+      />
+
       <Typography.Title level={5} style={{ marginTop: 20 }}>Lịch sử giao dịch</Typography.Title>
       <Table
         size="small"

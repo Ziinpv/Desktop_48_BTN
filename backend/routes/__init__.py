@@ -1,4 +1,4 @@
-from backend.routes import auth, customers, dresses, export, lookup, rentals, reports, service_types, services, system
+from backend.routes import auth, customers, dresses, export, lookup, payments, rentals, reports, service_types, services, system
 
 __all__ = [
     "auth",
@@ -6,6 +6,7 @@ __all__ = [
     "dresses",
     "export",
     "lookup",
+    "payments",
     "rentals",
     "reports",
     "service_types",

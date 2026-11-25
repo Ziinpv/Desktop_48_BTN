@@ -148,5 +148,59 @@ def invoice_pdf(customer: dict, rental: dict | None, services: list[dict], total
     story.append(Spacer(1, 24))
     story.append(Paragraph("Cảm ơn quý khách đã tin tưởng LUXE WEDDING STUDIO.", styles["LuxeBody"]))
     story.append(Paragraph("Hóa đơn này dùng cho mục đích quản lý nội bộ studio.", styles["LuxeSub"]))
+    pays = []
+    for r in customer.get("rentals") or []:
+        pays.extend(r.get("payments") or [])
+    pays.extend(customer.get("payments") or [])
+    if pays:
+        story.append(Spacer(1, 16))
+        story.append(Paragraph("Sổ thanh toán / biên lai", styles["LuxeTitle"]))
+        prow = [["Biên lai", "Loại", "Hình thức", "Số tiền", "Còn lại"]]
+        for p in pays:
+            prow.append(
+                [
+                    p.get("maBienLai") or p.get("maGD"),
+                    p.get("loai"),
+                    p.get("phuongThuc"),
+                    f"{p.get('soTien', 0):,.0f}",
+                    f"{p.get('soConLai', 0):,.0f}",
+                ]
+            )
+        ptable = Table(prow, colWidths=[110, 90, 90, 110, 110])
+        ptable.setStyle(
+            TableStyle(
+                [
+                    ("FONTNAME", (0, 0), (-1, -1), font),
+                    ("FONTSIZE", (0, 0), (-1, -1), 8),
+                    ("BACKGROUND", (0, 0), (-1, 0), PURPLE),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                    ("GRID", (0, 0), (-1, -1), 0.4, GOLD),
+                    ("ALIGN", (3, 1), (4, -1), "RIGHT"),
+                ]
+            )
+        )
+        story.append(ptable)
+    doc.build(story)
+    return buf.getvalue()
+
+
+def receipt_pdf(payment: dict) -> bytes:
+    styles, font = _styles()
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=48, rightMargin=48, topMargin=48, bottomMargin=48)
+    method = "Tiền mặt" if payment.get("phuongThuc") == "TIEN_MAT" else "Chuyển khoản"
+    story = [
+        Paragraph("LUXE WEDDING STUDIO", styles["LuxeTitle"]),
+        Paragraph("BIÊN LAI THU TIỀN", styles["LuxeTitle"]),
+        Paragraph(f"Số biên lai: {payment.get('maBienLai')}", styles["LuxeBody"]),
+        Paragraph(f"Mã GD: {payment.get('maGD')} · HĐ: {payment.get('maHopDong') or '-'}", styles["LuxeBody"]),
+        Paragraph(f"Khách: {payment.get('maKH')}", styles["LuxeBody"]),
+        Paragraph(f"Loại: {payment.get('loaiTen') or payment.get('loai')}", styles["LuxeBody"]),
+        Paragraph(f"Hình thức: {method}", styles["LuxeBody"]),
+        Paragraph(f"Số tiền: {payment.get('soTien', 0):,.0f} VNĐ", styles["LuxeTitle"]),
+        Paragraph(f"Còn lại sau giao dịch: {payment.get('soConLai', 0):,.0f} VNĐ", styles["LuxeBody"]),
+        Paragraph(payment.get("ghiChu") or "", styles["LuxeSub"]),
+        Paragraph(f"Thu ngân: {payment.get('createdBy') or '-'}", styles["LuxeBody"]),
+    ]
     doc.build(story)
     return buf.getvalue()

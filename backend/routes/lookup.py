@@ -101,6 +101,7 @@ def lookup_customer(q: str, _: User = Depends(get_current_user), db: Session = D
                 joinedload(DressRental.items).joinedload(DressRentalItem.dress),
                 joinedload(DressRental.customer),
                 joinedload(DressRental.history),
+                joinedload(DressRental.payments),
             )
             .filter(DressRental.ma_kh == c.ma_kh)
             .order_by(DressRental.ngay_thue.desc())
@@ -127,6 +128,7 @@ def lookup_customer(q: str, _: User = Depends(get_current_user), db: Session = D
         item["paidTotal"] = paid_total
         item["outstanding"] = outstanding
         item["grandTotal"] = service_total + rental_total
+        item["payments"] = [p for r in rental_data for p in (r.get("payments") or [])]
         item["transactions"] = [
             {
                 "id": h.id,

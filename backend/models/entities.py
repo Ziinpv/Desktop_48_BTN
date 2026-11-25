@@ -53,6 +53,10 @@ class Customer(Base):
     sdt = Column(String(20), index=True)
     dia_chi = Column(String(255))
     email = Column(String(120))
+    ten_vo = Column(String(120))
+    ten_chong = Column(String(120))
+    ngay_cuoi = Column(Date)
+    nguon_khach = Column(String(80))
     ngay_tao = Column(DateTime, default=datetime.utcnow)
 
 
@@ -64,6 +68,9 @@ class Dress(Base):
     loai_ao = Column(String(80), nullable=False, index=True)
     don_gia = Column(Float, nullable=False)
     hinh_anh = Column(String(500))
+    size = Column(String(20))
+    mau = Column(String(50))
+    phu_kien = Column(String(255))
     trang_thai = Column(String(20), default="SAN_SANG", index=True)
     ghi_chu = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -90,6 +97,7 @@ class DressRental(Base):
     customer = relationship("Customer")
     items = relationship("DressRentalItem", back_populates="rental", cascade="all, delete-orphan")
     history = relationship("RentalHistory", back_populates="rental", cascade="all, delete-orphan")
+    payments = relationship("Payment", back_populates="rental", cascade="all, delete-orphan")
 
 
 class DressRentalItem(Base):
@@ -129,6 +137,45 @@ class ServiceUsage(Base):
     ngay_sd = Column(Date)
     gia_luc_sd = Column(Float)
     ghi_chu = Column(Text)
+
+    customer = relationship("Customer")
+    service = relationship("Service")
+
+
+class Payment(Base):
+    __tablename__ = "payments"
+
+    ma_gd = Column(String(20), primary_key=True)
+    ma_bien_lai = Column(String(30), unique=True, index=True)
+    ma_kh = Column(String(20), ForeignKey("customers.ma_kh"), index=True)
+    ma_hop_dong = Column(String(20), ForeignKey("dress_rentals.ma_hop_dong"), index=True)
+    ma_dv = Column(String(20), ForeignKey("services.ma_dv"))
+    loai = Column(String(20), nullable=False, index=True)
+    so_tien = Column(Float, nullable=False)
+    phuong_thuc = Column(String(20), default="TIEN_MAT")
+    so_con_lai = Column(Float, default=0)
+    ghi_chu = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(String(50))
+
+    rental = relationship("DressRental", back_populates="payments")
+    customer = relationship("Customer")
+
+
+class Appointment(Base):
+    __tablename__ = "appointments"
+
+    ma_lich = Column(String(20), primary_key=True)
+    ma_kh = Column(String(20), ForeignKey("customers.ma_kh"), nullable=False, index=True)
+    ma_dv = Column(String(20), ForeignKey("services.ma_dv"), index=True)
+    nhiep_anh = Column(String(80))
+    phong = Column(String(80))
+    bat_dau = Column(DateTime, nullable=False, index=True)
+    ket_thuc = Column(DateTime, nullable=False)
+    trang_thai = Column(String(20), default="DA_DAT")
+    ghi_chu = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(String(50))
 
     customer = relationship("Customer")
     service = relationship("Service")

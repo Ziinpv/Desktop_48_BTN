@@ -25,6 +25,8 @@ def list_rentals(status: str = "", maKH: str = "", _: User = Depends(get_current
     query = db.query(DressRental).options(
         joinedload(DressRental.items).joinedload(DressRentalItem.dress),
         joinedload(DressRental.customer),
+        joinedload(DressRental.payments),
+        joinedload(DressRental.history),
     )
     if status:
         query = query.filter(DressRental.trang_thai == status)

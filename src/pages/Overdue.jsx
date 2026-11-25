@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { Button, Space, Table, App } from "antd";
+import { Button, Drawer, Space, Table, App } from "antd";
 import { DownloadOutlined } from "@ant-design/icons";
 import api, { downloadFile } from "../services/api";
 import { errText, fmtDate, vnd } from "../utils/format";
+import PaymentPanel from "../components/PaymentPanel";
 
 export default function Overdue() {
   const { message, modal } = App.useApp();
   const [rows, setRows] = useState([]);
+  const [payRow, setPayRow] = useState(null);
 
   const load = async () => {
     const { data } = await api.get("/api/reports/overdue");
@@ -36,10 +38,12 @@ export default function Overdue() {
           { title: "Hạn trả", dataIndex: "ngayTraDuKien", render: fmtDate },
           { title: "Số ngày trễ", dataIndex: "soNgayTre" },
           { title: "Tiền phạt", dataIndex: "phiTreHan", render: vnd },
+          { title: "Còn lại", dataIndex: "conNo", render: vnd },
           {
             title: "Thao tác",
             render: (_, r) => (
               <Space>
+                <Button size="small" onClick={() => setPayRow(r)}>Sổ thu</Button>
                 <Button size="small" onClick={async () => { try { await api.post(`/api/rentals/${r.maHopDong}/pay-penalty`); message.success("Đã ghi nhận thanh toán phí"); load(); } catch (e) { message.error(errText(e)); } }}>Thanh toán phí</Button>
                 <Button size="small" type="primary" danger onClick={() => modal.confirm({
                   title: "Xác nhận trả lại?",
@@ -54,6 +58,9 @@ export default function Overdue() {
           },
         ]}
       />
+      <Drawer title={payRow ? `Sổ thanh toán · ${payRow.maHopDong}` : "Sổ thanh toán"} open={!!payRow} onClose={() => setPayRow(null)} width={720}>
+        {payRow && <PaymentPanel rental={payRow} onChanged={load} />}
+      </Drawer>
     </div>
   );
 }

@@ -8,6 +8,7 @@ from backend.models.entities import (
     Dress,
     DressRental,
     DressRentalItem,
+    Payment,
     RentalHistory,
 )
 from backend.services.rules import (
@@ -114,16 +115,35 @@ def serialize_rental(rental: DressRental, today: date | None = None) -> dict:
     tien_coc = rental.tien_coc or 0
     if rental.trang_thai == "DA_TRA":
         han_tra = "DUNG_HAN" if late == 0 else "TRE_HAN"
-        da_thanh_toan = tien_coc + tien_thue + paid_penalty
-        con_no = max(0.0, phi_tre - paid_penalty)
     elif rental.trang_thai == "QUA_HAN":
         han_tra = "TRE_HAN"
-        da_thanh_toan = tien_coc + paid_penalty
-        con_no = max(0.0, tien_thue + phi_tre - paid_penalty)
     else:
         han_tra = "SAP_HET_HAN" if sap_het else "TRONG_HAN"
-        da_thanh_toan = tien_coc + paid_penalty
-        con_no = max(0.0, tien_thue + phi_tre - paid_penalty)
+    da_thu = 0.0
+    payment_rows = []
+    for p in rental.payments or []:
+        if p.loai == "HOAN_COC":
+            da_thu -= p.so_tien or 0
+        else:
+            da_thu += p.so_tien or 0
+        payment_rows.append(
+            {
+                "maGD": p.ma_gd,
+                "maBienLai": p.ma_bien_lai,
+                "loai": p.loai,
+                "soTien": p.so_tien,
+                "phuongThuc": p.phuong_thuc,
+                "soConLai": p.so_con_lai,
+                "createdAt": p.created_at.isoformat() if p.created_at else None,
+                "createdBy": p.created_by,
+                "ghiChu": p.ghi_chu,
+            }
+        )
+    if not payment_rows:
+        da_thu = tien_coc + paid_penalty + (tien_thue if rental.trang_thai == "DA_TRA" else 0)
+    phai_thu = tien_coc + tien_thue + phi_tre
+    da_thanh_toan = da_thu
+    con_no = max(0.0, phai_thu - da_thu)
 
     customer = rental.customer
     return {
@@ -139,9 +159,11 @@ def serialize_rental(rental: DressRental, today: date | None = None) -> dict:
         "ngayTraThucTe": rental.ngay_tra_thuc_te.isoformat() if rental.ngay_tra_thuc_te else None,
         "tienCoc": tien_coc,
         "tienThue": tien_thue,
+        "phaiThu": phai_thu,
         "daThanhToan": da_thanh_toan,
         "tienPhatDaThu": paid_penalty,
         "conNo": con_no,
+        "payments": payment_rows,
         "hanTra": han_tra,
         "trangThai": rental.trang_thai,
         "ghiChu": rental.ghi_chu,
@@ -236,6 +258,23 @@ def create_rental(db: Session, payload: dict, username: str) -> DressRental:
             username=username,
         )
     )
+    collected = rental.tien_coc or 0
+    if collected > 0:
+        tien_thue = sum(d.don_gia for d, _ in item_rows)
+        db.add(
+            Payment(
+                ma_gd=generate_code(db, Payment, "ma_gd", "GD"),
+                ma_bien_lai=generate_code(db, Payment, "ma_bien_lai", "BL"),
+                ma_kh=ma_kh,
+                ma_hop_dong=ma_hd,
+                loai="COC",
+                so_tien=collected,
+                phuong_thuc=payload.get("phuongThuc") or "TIEN_MAT",
+                so_con_lai=max(0.0, collected + tien_thue - collected),
+                ghi_chu="Thu cọc khi lập hợp đồng",
+                created_by=username,
+            )
+        )
     db.commit()
     db.refresh(rental)
     return rental
@@ -329,6 +368,21 @@ def pay_penalty(db: Session, ma_hd: str, username: str) -> DressRental:
             username=username,
         )
     )
+    if penalty > 0:
+        db.add(
+            Payment(
+                ma_gd=generate_code(db, Payment, "ma_gd", "GD"),
+                ma_bien_lai=generate_code(db, Payment, "ma_bien_lai", "BL"),
+                ma_kh=rental.ma_kh,
+                ma_hop_dong=ma_hd,
+                loai="PHI_TRE",
+                so_tien=penalty,
+                phuong_thuc="TIEN_MAT",
+                so_con_lai=0,
+                ghi_chu="Thanh toán phí trễ hạn",
+                created_by=username,
+            )
+        )
     db.commit()
     db.refresh(rental)
     return rental
@@ -337,7 +391,12 @@ def pay_penalty(db: Session, ma_hd: str, username: str) -> DressRental:
 def load_rental(db: Session, ma_hd: str) -> DressRental:
     rental = (
         db.query(DressRental)
-        .options(joinedload(DressRental.items).joinedload(DressRentalItem.dress), joinedload(DressRental.customer))
+        .options(
+            joinedload(DressRental.items).joinedload(DressRentalItem.dress),
+            joinedload(DressRental.customer),
+            joinedload(DressRental.payments),
+            joinedload(DressRental.history),
+        )
         .filter(DressRental.ma_hop_dong == ma_hd)
         .first()
     )

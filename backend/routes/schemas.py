@@ -50,6 +50,7 @@ class RentalIn(BaseModel):
     ngayThue: str
     ngayTraDuKien: str
     tienCoc: Optional[float] = None
+    phuongThuc: Optional[str] = "TIEN_MAT"
     ghiChu: Optional[str] = ""
 
 
