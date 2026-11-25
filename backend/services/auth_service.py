@@ -46,7 +46,30 @@ def get_current_user(
     return user
 
 
+VALID_ROLES = ("admin", "staff", "cashier", "warehouse")
+
+
 def require_admin(user: User = Depends(get_current_user)) -> User:
     if user.role != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Chỉ quản trị viên mới được phép")
     return user
+
+
+def require_roles(*roles: str):
+    allowed = set(roles) | {"admin"}
+
+    def _dep(user: User = Depends(get_current_user)) -> User:
+        if user.role not in allowed:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Tài khoản không có quyền thực hiện thao tác này",
+            )
+        return user
+
+    return _dep
+
+
+catalog_writer = require_roles("staff")
+cashier_writer = require_roles("staff", "cashier")
+warehouse_writer = require_roles("staff", "warehouse")
+studio_writer = require_roles("staff")

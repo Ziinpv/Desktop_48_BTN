@@ -48,7 +48,7 @@ export default function Login() {
           </Button>
         </Form>
         <Typography.Paragraph type="secondary" style={{ marginTop: 16, marginBottom: 0, fontSize: 12 }}>
-          Admin: admin / admin123 · Staff: staff / staff123
+          Admin: admin/admin123 · Staff: staff/staff123 · Thu ngân: cashier/cashier123 · Kho: kho/kho123
         </Typography.Paragraph>
       </div>
     </div>

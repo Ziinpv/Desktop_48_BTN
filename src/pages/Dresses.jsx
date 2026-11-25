@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Button, Form, Input, InputNumber, Modal, Select, Space, Table, App } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
+import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
+import { canDo } from "../utils/roles";
 import api from "../services/api";
 import { errText, vnd } from "../utils/format";
 import StatusTag from "../components/StatusTag";
@@ -13,6 +15,7 @@ const COLORS = ["Trắng", "Trắng ngà", "Ivory", "Champagne", "Đỏ", "Navy"
 export default function Dresses() {
   const { t } = useTranslation();
   const { message, modal } = App.useApp();
+  const canEdit = canDo(useSelector((s) => s.auth.user?.role), "editCatalog");
   const [rows, setRows] = useState([]);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
@@ -53,7 +56,7 @@ export default function Dresses() {
         <Select allowClear placeholder="Size" style={{ width: 110 }} value={size || undefined} onChange={(v) => setSize(v || "")} options={SIZES.map((x) => ({ value: x, label: x }))} />
         <Select allowClear placeholder="Màu" style={{ width: 140 }} value={mau || undefined} onChange={(v) => setMau(v || "")} options={COLORS.map((x) => ({ value: x, label: x }))} />
         <Select allowClear placeholder="Trạng thái" style={{ width: 180 }} value={status || undefined} onChange={(v) => setStatus(v || "")} options={[{ value: "SAN_SANG", label: "Còn hàng" }, { value: "DANG_THUE", label: "Đang thuê" }, { value: "HET_HANG", label: "Hết hàng" }, { value: "HON_HOC", label: "Hỏng hóc" }]} />
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); form.setFieldsValue({ donGia: 0, trangThai: "SAN_SANG" }); setOpen(true); }}>{t("add")}</Button>
+        {canEdit ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); form.setFieldsValue({ donGia: 0, trangThai: "SAN_SANG" }); setOpen(true); }}>{t("add")}</Button> : null}
       </Space>
       <Table
         rowKey="maDress"
@@ -71,12 +74,12 @@ export default function Dresses() {
           { title: "Kho", dataIndex: "trangThai", render: (v) => <StatusTag value={v} /> },
           {
             title: t("actions"),
-            render: (_, r) => (
+            render: (_, r) => canEdit ? (
               <Space>
                 <Button size="small" onClick={() => { setEditing(r); form.setFieldsValue(r); setOpen(true); }}>{t("edit")}</Button>
                 <Button size="small" danger onClick={() => modal.confirm({ title: t("confirmDelete"), onOk: async () => { try { await api.delete(`/api/dresses/${r.maDress}`); message.success(t("success")); load(); } catch (e) { message.error(errText(e)); } } })}>{t("delete")}</Button>
               </Space>
-            ),
+            ) : "Chỉ xem",
           },
         ]}
       />

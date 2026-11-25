@@ -1,6 +1,5 @@
 from sqlalchemy import inspect, text
-
-from backend.config.database import Base, engine
+from backend.config.database import Base, SessionLocal, engine
 
 EXTRA_COLUMNS = {
     "customers": [
@@ -17,6 +16,26 @@ EXTRA_COLUMNS = {
 }
 
 
+def ensure_demo_roles():
+    from backend.models.entities import User
+    from backend.utils.security import hash_password
+
+    extras = [
+        ("cashier", "Thu ngân Studio", "cashier123", "cashier"),
+        ("kho", "Nhân viên kho áo", "kho123", "warehouse"),
+    ]
+    db = SessionLocal()
+    try:
+        for username, full_name, password, role in extras:
+            row = db.query(User).filter(User.username == username).first()
+            if row:
+                continue
+            db.add(User(username=username, full_name=full_name, password_hash=hash_password(password), role=role))
+        db.commit()
+    finally:
+        db.close()
+
+
 def ensure_schema():
     Base.metadata.create_all(bind=engine)
     insp = inspect(engine)
@@ -29,3 +48,5 @@ def ensure_schema():
             for name, typ in cols:
                 if name not in existing:
                     conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {typ}"))
+    if "users" in tables:
+        ensure_demo_roles()

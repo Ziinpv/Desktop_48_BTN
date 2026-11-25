@@ -9,7 +9,7 @@ from backend.config.database import get_db
 from backend.models.entities import Dress, DressRental, DressRentalItem, User
 from backend.routes.schemas import DressIn, dress_out
 from backend.services.audit import write_audit
-from backend.services.auth_service import get_current_user
+from backend.services.auth_service import catalog_writer, get_current_user
 from backend.services.rules import ACTIVE_RENTAL_STATUSES
 from backend.utils.ids import generate_code
 
@@ -49,7 +49,7 @@ def list_dresses(
 
 
 @router.post("")
-def create_dress(payload: DressIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def create_dress(payload: DressIn, user: User = Depends(catalog_writer), db: Session = Depends(get_db)):
     code = (payload.maDress or "").strip().upper() or generate_code(db, Dress, "ma_dress", "AC")
     if db.query(Dress).filter(Dress.ma_dress == code).first():
         raise HTTPException(400, "Mã áo đã tồn tại")
@@ -72,7 +72,7 @@ def create_dress(payload: DressIn, user: User = Depends(get_current_user), db: S
 
 
 @router.put("/{code}")
-def update_dress(code: str, payload: DressIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def update_dress(code: str, payload: DressIn, user: User = Depends(catalog_writer), db: Session = Depends(get_db)):
     row = db.query(Dress).filter(Dress.ma_dress == code).first()
     if not row:
         raise HTTPException(404, "Không tìm thấy bộ áo")
@@ -91,7 +91,7 @@ def update_dress(code: str, payload: DressIn, user: User = Depends(get_current_u
 
 
 @router.delete("/{code}")
-def delete_dress(code: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def delete_dress(code: str, user: User = Depends(catalog_writer), db: Session = Depends(get_db)):
     row = db.query(Dress).filter(Dress.ma_dress == code).first()
     if not row:
         raise HTTPException(404, "Không tìm thấy bộ áo")

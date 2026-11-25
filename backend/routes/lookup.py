@@ -16,7 +16,7 @@ from backend.models.entities import (
 )
 from backend.routes.schemas import ServiceUsageIn, customer_out, dress_out, service_out
 from backend.services.audit import write_audit
-from backend.services.auth_service import get_current_user
+from backend.services.auth_service import get_current_user, studio_writer
 from backend.services.rental_service import refresh_overdue, serialize_rental
 from backend.services.rules import ACTIVE_RENTAL_STATUSES, calc_late_fee, days_late
 
@@ -216,7 +216,7 @@ def lookup_qr(q: str, _: User = Depends(get_current_user), db: Session = Depends
 
 
 @router.post("/service-usage")
-def add_usage(payload: ServiceUsageIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def add_usage(payload: ServiceUsageIn, user: User = Depends(studio_writer), db: Session = Depends(get_db)):
     service = db.query(Service).filter(Service.ma_dv == payload.maDV).first()
     if not service:
         raise HTTPException(404, "Không tìm thấy dịch vụ")

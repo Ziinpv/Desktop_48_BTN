@@ -3,10 +3,13 @@ import { Button, Select, Space, Table, App } from "antd";
 import { DownloadOutlined } from "@ant-design/icons";
 import api, { downloadFile } from "../services/api";
 import { errText, fmtDate, vnd } from "../utils/format";
+import { useSelector } from "react-redux";
 import StatusTag from "../components/StatusTag";
+import { canDo } from "../utils/roles";
 
 export default function Unreturned() {
   const { message, modal } = App.useApp();
+  const canReturn = canDo(useSelector((s) => s.auth.user?.role), "returnDress");
   const [rows, setRows] = useState([]);
   const [sort, setSort] = useState("date");
 
@@ -55,7 +58,7 @@ export default function Unreturned() {
           { title: "TT", dataIndex: "trangThai", render: (v, r) => <>{<StatusTag value={v} />}{r.sapHetHan ? " · sắp hết hạn" : ""}</> },
           {
             title: "Thao tác",
-            render: (_, r) => (
+            render: (_, r) => canReturn ? (
               <Button size="small" type="primary" onClick={() => modal.confirm({
                 title: "Thu hồi áo?",
                 onOk: async () => {
@@ -63,7 +66,7 @@ export default function Unreturned() {
                   catch (e) { message.error(errText(e)); }
                 },
               })}>Thu hồi</Button>
-            ),
+            ) : "Chỉ xem",
           },
         ]}
       />

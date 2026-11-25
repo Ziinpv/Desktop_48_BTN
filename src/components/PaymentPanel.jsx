@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button, Form, Input, InputNumber, Modal, Select, Space, Table, Typography, App } from "antd";
+import { useSelector } from "react-redux";
+import { canDo } from "../utils/roles";
 import api, { downloadFile } from "../services/api";
 import { errText, vnd } from "../utils/format";
 
@@ -13,6 +15,7 @@ const LOAI = [
 
 export default function PaymentPanel({ rental, onChanged }) {
   const { message } = App.useApp();
+  const canPay = canDo(useSelector((s) => s.auth.user?.role), "collectPayment");
   const [rows, setRows] = useState(rental?.payments || []);
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
@@ -41,7 +44,7 @@ export default function PaymentPanel({ rental, onChanged }) {
     <div>
       <Space wrap style={{ marginBottom: 8 }}>
         <Typography.Text>Phải thu {vnd(rental.phaiThu)} · Đã thu {vnd(rental.daThanhToan)} · Còn lại {vnd(rental.conNo)}</Typography.Text>
-        <Button size="small" type="primary" onClick={() => { form.resetFields(); form.setFieldsValue({ loai: rental.phiTreHan ? "PHI_TRE" : "THUE", phuongThuc: "TIEN_MAT", soTien: rental.conNo || rental.phiTreHan || 0 }); setOpen(true); }}>Thu tiền</Button>
+        {canPay ? <Button size="small" type="primary" onClick={() => { form.resetFields(); form.setFieldsValue({ loai: rental.phiTreHan ? "PHI_TRE" : "THUE", phuongThuc: "TIEN_MAT", soTien: rental.conNo || rental.phiTreHan || 0 }); setOpen(true); }}>Thu tiền</Button> : null}
       </Space>
       <Table
         size="small"

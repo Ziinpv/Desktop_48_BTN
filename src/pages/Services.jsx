@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Button, Form, Input, InputNumber, Modal, Select, Space, Table, App } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
+import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
+import { canDo } from "../utils/roles";
 import api from "../services/api";
 import { errText, vnd } from "../utils/format";
 import StatusTag from "../components/StatusTag";
@@ -9,6 +11,7 @@ import StatusTag from "../components/StatusTag";
 export default function Services() {
   const { t } = useTranslation();
   const { message, modal } = App.useApp();
+  const canEdit = canDo(useSelector((s) => s.auth.user?.role), "editCatalog");
   const [rows, setRows] = useState([]);
   const [types, setTypes] = useState([]);
   const [q, setQ] = useState("");
@@ -50,7 +53,7 @@ export default function Services() {
         <Select allowClear placeholder="Loại DV" style={{ width: 220 }} value={typeId || undefined} onChange={(v) => setTypeId(v || "")} options={types.map((t) => ({ value: t.maLoaiDV, label: t.tenLoaiDV }))} />
         <Select allowClear placeholder="Trạng thái" style={{ width: 160 }} value={status || undefined} onChange={(v) => setStatus(v || "")} options={[{ value: "active", label: "Còn hàng" }, { value: "out_of_stock", label: "Hết hàng" }, { value: "inactive", label: "Ngừng" }]} />
         <Select value={sort} onChange={setSort} style={{ width: 160 }} options={[{ value: "ma_dv", label: "Mã" }, { value: "price_asc", label: "Giá tăng" }, { value: "price_desc", label: "Giá giảm" }]} />
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); form.setFieldsValue({ donGia: 0, trangThai: "active" }); setOpen(true); }}>{t("add")}</Button>
+        {canEdit ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); form.setFieldsValue({ donGia: 0, trangThai: "active" }); setOpen(true); }}>{t("add")}</Button> : null}
       </Space>
       <Table
         rowKey="maDV"
@@ -64,12 +67,12 @@ export default function Services() {
           { title: "TT", dataIndex: "trangThai", render: (v) => <StatusTag value={v} /> },
           {
             title: t("actions"),
-            render: (_, r) => (
+            render: (_, r) => canEdit ? (
               <Space>
                 <Button size="small" onClick={() => { setEditing(r); form.setFieldsValue(r); setOpen(true); }}>{t("edit")}</Button>
                 <Button size="small" danger onClick={() => modal.confirm({ title: t("confirmDelete"), onOk: async () => { try { await api.delete(`/api/services/${r.maDV}`); message.success(t("success")); load(); } catch (e) { message.error(errText(e)); } } })}>{t("delete")}</Button>
               </Space>
-            ),
+            ) : "Chỉ xem",
           },
         ]}
       />

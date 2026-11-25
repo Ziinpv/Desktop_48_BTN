@@ -23,6 +23,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { logout } from "../store/authSlice";
 import DueReminders from "../components/DueReminders";
+import { canAccess } from "../utils/roles";
 import { setCollapsed, setLang, toggleTheme } from "../store/uiSlice";
 import i18n from "../i18n";
 
@@ -95,6 +96,17 @@ export default function AppLayout() {
     [t, user]
   );
 
+  const visibleItems = useMemo(
+    () => items
+      .map((group) => {
+        if (!group.children) return group;
+        const children = group.children.filter((c) => canAccess(user?.role, c.key));
+        return children.length ? { ...group, children } : null;
+      })
+      .filter(Boolean),
+    [items, user]
+  );
+
   return (
     <Layout className="luxe-app" style={{ minHeight: "100vh" }}>
       <Sider collapsible collapsed={collapsed} onCollapse={(v) => dispatch(setCollapsed(v))} width={272}>
@@ -119,7 +131,7 @@ export default function AppLayout() {
           theme="dark"
           mode="inline"
           selectedKeys={[loc.pathname]}
-          items={items}
+          items={visibleItems}
           onClick={({ key }) => nav(key)}
           style={{ background: "transparent", border: 0 }}
         />

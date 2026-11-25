@@ -5,7 +5,7 @@ from backend.config.database import get_db
 from backend.models.entities import DressRental, DressRentalItem, User
 from backend.routes.schemas import RentalIn, RentalUpdateIn, ReturnIn
 from backend.services.audit import write_audit
-from backend.services.auth_service import get_current_user
+from backend.services.auth_service import cashier_writer, get_current_user, studio_writer, warehouse_writer
 from backend.services.rental_service import (
     create_rental,
     load_rental,
@@ -43,35 +43,35 @@ def get_rental(code: str, _: User = Depends(get_current_user), db: Session = Dep
 
 
 @router.post("")
-def add_rental(payload: RentalIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def add_rental(payload: RentalIn, user: User = Depends(studio_writer), db: Session = Depends(get_db)):
     rental = create_rental(db, payload.model_dump(), user.username)
     write_audit(db, user.username, "CREATE", "DressRental", rental.ma_hop_dong, f"Thuê {len(payload.dresses)} bộ")
     return serialize_rental(load_rental(db, rental.ma_hop_dong))
 
 
 @router.put("/{code}")
-def edit_rental(code: str, payload: RentalUpdateIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def edit_rental(code: str, payload: RentalUpdateIn, user: User = Depends(studio_writer), db: Session = Depends(get_db)):
     rental = update_rental(db, code, payload.model_dump(), user.username)
     write_audit(db, user.username, "UPDATE", "DressRental", code, "Cập nhật hợp đồng")
     return serialize_rental(load_rental(db, rental.ma_hop_dong))
 
 
 @router.post("/{code}/return")
-def do_return(code: str, payload: ReturnIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def do_return(code: str, payload: ReturnIn, user: User = Depends(warehouse_writer), db: Session = Depends(get_db)):
     rental = return_rental(db, code, payload.model_dump(), user.username)
     write_audit(db, user.username, "RETURN", "DressRental", code, "Nhận trả áo cưới")
     return serialize_rental(load_rental(db, rental.ma_hop_dong))
 
 
 @router.post("/{code}/pay-penalty")
-def do_pay(code: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def do_pay(code: str, user: User = Depends(cashier_writer), db: Session = Depends(get_db)):
     rental = pay_penalty(db, code, user.username)
     write_audit(db, user.username, "PAY", "DressRental", code, "Thanh toán phí trễ hạn")
     return serialize_rental(load_rental(db, rental.ma_hop_dong))
 
 
 @router.delete("/{code}")
-def delete_rental(code: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def delete_rental(code: str, user: User = Depends(studio_writer), db: Session = Depends(get_db)):
     rental = load_rental(db, code)
     if rental.trang_thai != "DA_TRA":
         raise HTTPException(400, "Chỉ xóa hợp đồng đã hoàn tất trả")

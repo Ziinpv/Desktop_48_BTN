@@ -2,7 +2,8 @@ import { ConfigProvider, App as AntApp, theme as antTheme } from "antd";
 import viVN from "antd/locale/vi_VN";
 import enUS from "antd/locale/en_US";
 import { useSelector } from "react-redux";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { canAccess } from "./utils/roles";
 import AppLayout from "./layouts/AppLayout";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -24,7 +25,10 @@ import Appointments from "./pages/Appointments";
 
 function Guard({ children }) {
   const token = useSelector((s) => s.auth.token);
+  const role = useSelector((s) => s.auth.user?.role);
+  const loc = useLocation();
   if (!token) return <Navigate to="/login" replace />;
+  if (!canAccess(role, loc.pathname === "" ? "/" : loc.pathname)) return <Navigate to="/" replace />;
   return children;
 }
 

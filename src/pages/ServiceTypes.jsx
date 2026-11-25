@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { Button, Form, Input, Modal, Select, Space, Switch, Table, App } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
+import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
+import { canDo } from "../utils/roles";
 import api from "../services/api";
 import { errText } from "../utils/format";
 
 export default function ServiceTypes() {
   const { t } = useTranslation();
   const { message, modal } = App.useApp();
+  const canEdit = canDo(useSelector((s) => s.auth.user?.role), "editCatalog");
   const [rows, setRows] = useState([]);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("all");
@@ -43,7 +46,7 @@ export default function ServiceTypes() {
       <Space style={{ marginBottom: 16 }} wrap>
         <Input.Search allowClear placeholder="Tên / mã loại" onSearch={setQ} onChange={(e) => !e.target.value && setQ("")} />
         <Select value={status} onChange={setStatus} style={{ width: 160 }} options={[{ value: "all", label: "Tất cả" }, { value: "active", label: "Hoạt động" }, { value: "inactive", label: "Ngừng" }]} />
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); form.setFieldsValue({ trangThai: true }); setOpen(true); }}>{t("add")}</Button>
+        {canEdit ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); form.setFieldsValue({ trangThai: true }); setOpen(true); }}>{t("add")}</Button> : null}
       </Space>
       <Table
         rowKey="maLoaiDV"
@@ -56,12 +59,12 @@ export default function ServiceTypes() {
           { title: "TT", dataIndex: "trangThai", render: (v) => (v ? "Hoạt động" : "Ngừng") },
           {
             title: t("actions"),
-            render: (_, r) => (
+            render: (_, r) => canEdit ? (
               <Space>
                 <Button size="small" onClick={() => { setEditing(r); form.setFieldsValue(r); setOpen(true); }}>{t("edit")}</Button>
                 <Button size="small" danger onClick={() => modal.confirm({ title: t("confirmDelete"), onOk: async () => { try { await api.delete(`/api/service-types/${r.maLoaiDV}`); message.success(t("success")); load(); } catch (e) { message.error(errText(e)); } } })}>{t("delete")}</Button>
               </Space>
-            ),
+            ) : "Chỉ xem",
           },
         ]}
       />

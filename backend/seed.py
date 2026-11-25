@@ -64,6 +64,18 @@ def _seed(db: Session):
                 password_hash=hash_password("staff123"),
                 role="staff",
             ),
+            User(
+                username="cashier",
+                full_name="Thu ngân Studio",
+                password_hash=hash_password("cashier123"),
+                role="cashier",
+            ),
+            User(
+                username="kho",
+                full_name="Nhân viên kho áo",
+                password_hash=hash_password("kho123"),
+                role="warehouse",
+            ),
         ]
     )
 

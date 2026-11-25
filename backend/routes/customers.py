@@ -7,7 +7,7 @@ from backend.config.database import get_db
 from backend.models.entities import Customer, DressRental, ServiceUsage, User
 from backend.routes.schemas import CustomerIn, customer_out, parse_optional_date
 from backend.services.audit import write_audit
-from backend.services.auth_service import get_current_user
+from backend.services.auth_service import get_current_user, studio_writer
 from backend.utils.ids import generate_code
 
 router = APIRouter(prefix="/api/customers", tags=["customers"])
@@ -50,7 +50,7 @@ def list_customers(
 
 
 @router.post("")
-def create_customer(payload: CustomerIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def create_customer(payload: CustomerIn, user: User = Depends(studio_writer), db: Session = Depends(get_db)):
     code = (payload.maKH or "").strip().upper() or generate_code(db, Customer, "ma_kh", "KH")
     if db.query(Customer).filter(Customer.ma_kh == code).first():
         raise HTTPException(400, "Mã khách hàng đã tồn tại")
@@ -63,7 +63,7 @@ def create_customer(payload: CustomerIn, user: User = Depends(get_current_user),
 
 
 @router.put("/{code}")
-def update_customer(code: str, payload: CustomerIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def update_customer(code: str, payload: CustomerIn, user: User = Depends(studio_writer), db: Session = Depends(get_db)):
     row = db.query(Customer).filter(Customer.ma_kh == code).first()
     if not row:
         raise HTTPException(404, "Không tìm thấy khách hàng")
@@ -74,7 +74,7 @@ def update_customer(code: str, payload: CustomerIn, user: User = Depends(get_cur
 
 
 @router.delete("/{code}")
-def delete_customer(code: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def delete_customer(code: str, user: User = Depends(studio_writer), db: Session = Depends(get_db)):
     row = db.query(Customer).filter(Customer.ma_kh == code).first()
     if not row:
         raise HTTPException(404, "Không tìm thấy khách hàng")

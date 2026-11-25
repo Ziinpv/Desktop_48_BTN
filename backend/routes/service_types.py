@@ -5,7 +5,7 @@ from backend.config.database import get_db
 from backend.models.entities import Service, ServiceType, User
 from backend.routes.schemas import ServiceTypeIn, type_out
 from backend.services.audit import write_audit
-from backend.services.auth_service import get_current_user
+from backend.services.auth_service import catalog_writer, get_current_user
 from backend.utils.ids import generate_code
 
 router = APIRouter(prefix="/api/service-types", tags=["service-types"])
@@ -36,7 +36,7 @@ def list_types(
 
 
 @router.post("")
-def create_type(payload: ServiceTypeIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def create_type(payload: ServiceTypeIn, user: User = Depends(catalog_writer), db: Session = Depends(get_db)):
     if not payload.moTa.strip():
         raise HTTPException(400, "Mô tả không được để trống")
     code = (payload.maLoaiDV or "").strip().upper() or generate_code(db, ServiceType, "ma_loai_dv", "LDV", 2)
@@ -50,7 +50,7 @@ def create_type(payload: ServiceTypeIn, user: User = Depends(get_current_user), 
 
 
 @router.put("/{code}")
-def update_type(code: str, payload: ServiceTypeIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def update_type(code: str, payload: ServiceTypeIn, user: User = Depends(catalog_writer), db: Session = Depends(get_db)):
     if not payload.moTa.strip():
         raise HTTPException(400, "Mô tả không được để trống")
     row = db.query(ServiceType).filter(ServiceType.ma_loai_dv == code).first()
@@ -65,7 +65,7 @@ def update_type(code: str, payload: ServiceTypeIn, user: User = Depends(get_curr
 
 
 @router.delete("/{code}")
-def delete_type(code: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def delete_type(code: str, user: User = Depends(catalog_writer), db: Session = Depends(get_db)):
     row = db.query(ServiceType).filter(ServiceType.ma_loai_dv == code).first()
     if not row:
         raise HTTPException(404, "Không tìm thấy loại dịch vụ")

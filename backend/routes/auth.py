@@ -35,7 +35,7 @@ def list_users(_: User = Depends(require_admin), db: Session = Depends(get_db)):
 def create_user(payload: UserIn, admin: User = Depends(require_admin), db: Session = Depends(get_db)):
     if db.query(User).filter(User.username == payload.username).first():
         raise HTTPException(400, "Tên đăng nhập đã tồn tại")
-    if payload.role not in ("admin", "staff"):
+    if payload.role not in ("admin", "staff", "cashier", "warehouse"):
         raise HTTPException(400, "Vai trò không hợp lệ")
     user = User(
         username=payload.username.strip(),
@@ -57,7 +57,7 @@ def update_user(user_id: int, payload: dict, admin: User = Depends(require_admin
         raise HTTPException(404, "Không tìm thấy người dùng")
     if "fullName" in payload:
         user.full_name = payload["fullName"]
-    if "role" in payload and payload["role"] in ("admin", "staff"):
+    if "role" in payload and payload["role"] in ("admin", "staff", "cashier", "warehouse"):
         user.role = payload["role"]
     if "isActive" in payload:
         user.is_active = bool(payload["isActive"])

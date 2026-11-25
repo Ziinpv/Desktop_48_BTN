@@ -5,7 +5,7 @@ from backend.config.database import get_db
 from backend.models.entities import Service, ServiceType, ServiceUsage, User
 from backend.routes.schemas import ServiceIn, service_out
 from backend.services.audit import write_audit
-from backend.services.auth_service import get_current_user
+from backend.services.auth_service import catalog_writer, get_current_user
 from backend.utils.ids import generate_code
 
 router = APIRouter(prefix="/api/services", tags=["services"])
@@ -62,7 +62,7 @@ def catalog(_: User = Depends(get_current_user), db: Session = Depends(get_db)):
 
 
 @router.post("")
-def create_service(payload: ServiceIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def create_service(payload: ServiceIn, user: User = Depends(catalog_writer), db: Session = Depends(get_db)):
     if not db.query(ServiceType).filter(ServiceType.ma_loai_dv == payload.maLoaiDV).first():
         raise HTTPException(400, "Loại dịch vụ không tồn tại")
     code = (payload.maDV or "").strip().upper() or generate_code(db, Service, "ma_dv", "DV")
@@ -85,7 +85,7 @@ def create_service(payload: ServiceIn, user: User = Depends(get_current_user), d
 
 
 @router.put("/{code}")
-def update_service(code: str, payload: ServiceIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def update_service(code: str, payload: ServiceIn, user: User = Depends(catalog_writer), db: Session = Depends(get_db)):
     row = db.query(Service).options(joinedload(Service.loai)).filter(Service.ma_dv == code).first()
     if not row:
         raise HTTPException(404, "Không tìm thấy dịch vụ")
@@ -101,7 +101,7 @@ def update_service(code: str, payload: ServiceIn, user: User = Depends(get_curre
 
 
 @router.delete("/{code}")
-def delete_service(code: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def delete_service(code: str, user: User = Depends(catalog_writer), db: Session = Depends(get_db)):
     row = db.query(Service).filter(Service.ma_dv == code).first()
     if not row:
         raise HTTPException(404, "Không tìm thấy dịch vụ")

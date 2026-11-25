@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Button, Card, Checkbox, DatePicker, Drawer, Form, Input, InputNumber, Modal, Select, Space, Table, App, Alert } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
+import { canDo } from "../utils/roles";
 import api from "../services/api";
 import { errText, fmtDate, vnd } from "../utils/format";
 import StatusTag from "../components/StatusTag";
@@ -11,6 +13,10 @@ import PaymentPanel from "../components/PaymentPanel";
 export default function Rentals() {
   const { t } = useTranslation();
   const { message, modal } = App.useApp();
+  const role = useSelector((s) => s.auth.user?.role);
+  const canCreate = canDo(role, "createRental");
+  const canPay = canDo(role, "collectPayment");
+  const canReturn = canDo(role, "returnDress");
   const [rows, setRows] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [dresses, setDresses] = useState([]);
@@ -90,7 +96,7 @@ export default function Rentals() {
       </div>
       <Space style={{ marginBottom: 16 }} wrap>
         <Select allowClear placeholder="Trạng thái" style={{ width: 180 }} value={status || undefined} onChange={(v) => setStatus(v || "")} options={[{ value: "DANG_THUE", label: "Đang thuê" }, { value: "QUA_HAN", label: "Quá hạn" }, { value: "DA_TRA", label: "Đã trả" }]} />
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); form.setFieldsValue({ ngayThue: dayjs(), ngayTraDuKien: dayjs().add(3, "day"), dresses: [], tienCoc: 0 }); setOpen(true); }}>Lập phiếu thuê</Button>
+        {canCreate ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); form.setFieldsValue({ ngayThue: dayjs(), ngayTraDuKien: dayjs().add(3, "day"), dresses: [], tienCoc: 0 }); setOpen(true); }}>Lập phiếu thuê</Button> : null}
       </Space>
       <Table
         rowKey="maHopDong"
@@ -108,8 +114,8 @@ export default function Rentals() {
             title: t("actions"),
             render: (_, r) => (
               <Space>
-                <Button size="small" onClick={() => setPayRow(r)}>Sổ thu</Button>
-                {r.trangThai !== "DA_TRA" ? <Button size="small" danger onClick={() => doReturn(r)}>Nhận trả</Button> : "Hoàn tất"}
+                {canPay ? <Button size="small" onClick={() => setPayRow(r)}>Sổ thu</Button> : null}
+                {r.trangThai !== "DA_TRA" && canReturn ? <Button size="small" danger onClick={() => doReturn(r)}>Nhận trả</Button> : null}
               </Space>
             ),
           },

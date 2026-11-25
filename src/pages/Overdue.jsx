@@ -3,11 +3,16 @@ import { Button, Drawer, Space, Table, App } from "antd";
 import { DownloadOutlined } from "@ant-design/icons";
 import api, { downloadFile } from "../services/api";
 import { errText, fmtDate, vnd } from "../utils/format";
+import { useSelector } from "react-redux";
 import PaymentPanel from "../components/PaymentPanel";
+import { canDo } from "../utils/roles";
 import QrScanBar from "../components/QrScanBar";
 
 export default function Overdue() {
   const { message, modal } = App.useApp();
+  const role = useSelector((s) => s.auth.user?.role);
+  const canPay = canDo(role, "collectPayment");
+  const canReturn = canDo(role, "returnDress");
   const [rows, setRows] = useState([]);
   const [payRow, setPayRow] = useState(null);
   const [active, setActive] = useState(null);
@@ -61,16 +66,16 @@ export default function Overdue() {
             title: "Thao tác",
             render: (_, r) => (
               <Space>
-                <Button size="small" onClick={() => setPayRow(r)}>Sổ thu</Button>
-                <Button size="small" onClick={async () => { try { await api.post(`/api/rentals/${r.maHopDong}/pay-penalty`); message.success("Đã ghi nhận thanh toán phí"); load(); } catch (e) { message.error(errText(e)); } }}>Thanh toán phí</Button>
-                <Button size="small" type="primary" danger onClick={() => modal.confirm({
+                {canPay ? <Button size="small" onClick={() => setPayRow(r)}>Sổ thu</Button> : null}
+                {canPay ? <Button size="small" onClick={async () => { try { await api.post(`/api/rentals/${r.maHopDong}/pay-penalty`); message.success("Đã ghi nhận thanh toán phí"); load(); } catch (e) { message.error(errText(e)); } }}>Thanh toán phí</Button> : null}
+                {canReturn ? <Button size="small" type="primary" danger onClick={() => modal.confirm({
                   title: "Xác nhận trả lại?",
                   content: `Phí phạt ${vnd(r.phiTreHan)}`,
                   onOk: async () => {
                     try { await api.post(`/api/rentals/${r.maHopDong}/return`, {}); message.success("Đã nhận trả"); load(); }
                     catch (e) { message.error(errText(e)); }
                   },
-                })}>Xác nhận trả</Button>
+                })}>Xác nhận trả</Button> : null}
               </Space>
             ),
           },
@@ -83,16 +88,16 @@ export default function Overdue() {
         width={760}
         extra={active ? (
           <Space>
-            <Button onClick={() => setPayRow(active)}>Sổ thu</Button>
-            <Button onClick={async () => { try { await api.post(`/api/rentals/${active.maHopDong}/pay-penalty`); message.success("Đã ghi nhận thanh toán phí"); load(); } catch (e) { message.error(errText(e)); } }}>Thanh toán phí</Button>
-            <Button type="primary" danger onClick={() => modal.confirm({
+            {canPay ? <Button onClick={() => setPayRow(active)}>Sổ thu</Button> : null}
+            {canPay ? <Button onClick={async () => { try { await api.post(`/api/rentals/${active.maHopDong}/pay-penalty`); message.success("Đã ghi nhận thanh toán phí"); load(); } catch (e) { message.error(errText(e)); } }}>Thanh toán phí</Button> : null}
+            {canReturn ? <Button type="primary" danger onClick={() => modal.confirm({
               title: "Xác nhận trả lại?",
               content: `Phí phạt ${vnd(active.phiTreHan)}`,
               onOk: async () => {
                 try { await api.post(`/api/rentals/${active.maHopDong}/return`, {}); message.success("Đã nhận trả"); setActive(null); load(); }
                 catch (e) { message.error(errText(e)); }
               },
-            })}>Xác nhận trả</Button>
+            })}>Xác nhận trả</Button> : null}
           </Space>
         ) : null}
       >

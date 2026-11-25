@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from backend.config.database import get_db
 from backend.models.entities import Payment, User
 from backend.services.audit import write_audit
-from backend.services.auth_service import get_current_user
+from backend.services.auth_service import cashier_writer, get_current_user
 from backend.services.export_service import receipt_pdf
 from backend.services.payment_service import payment_out, record_payment
 from backend.routes.export import _file
@@ -40,7 +40,7 @@ def list_payments(
 
 
 @router.post("")
-def add_payment(payload: PaymentIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def add_payment(payload: PaymentIn, user: User = Depends(cashier_writer), db: Session = Depends(get_db)):
     row = record_payment(db, payload.model_dump(), user.username)
     write_audit(db, user.username, "CREATE", "Payment", row.ma_gd, f"{row.loai} {row.so_tien}")
     return payment_out(row)

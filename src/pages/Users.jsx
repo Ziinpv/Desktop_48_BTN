@@ -39,7 +39,7 @@ export default function Users() {
     <div>
       <div className="page-head">
         <h1>Người dùng & phân quyền</h1>
-        <p>Admin / Staff · mật khẩu hash bcrypt · JWT session</p>
+        <p>Admin / Staff / Thu ngân / Kho · mật khẩu hash bcrypt · JWT session</p>
       </div>
       <Button type="primary" style={{ marginBottom: 16 }} onClick={() => { form.resetFields(); form.setFieldsValue({ role: "staff", isActive: true }); setOpen(true); }}>Thêm người dùng</Button>
       <Table
@@ -67,7 +67,15 @@ export default function Users() {
           <Form.Item name="username" label="Tài khoản" rules={[{ required: true }]}><Input /></Form.Item>
           <Form.Item name="fullName" label="Họ tên" rules={[{ required: true }]}><Input /></Form.Item>
           <Form.Item name="password" label="Mật khẩu" rules={[{ required: true }]}><Input.Password /></Form.Item>
-          <Form.Item name="role" label="Vai trò"><Select options={[{ value: "admin", label: "Admin" }, { value: "staff", label: "Staff" }]} /></Form.Item>
+          <Form.Item name="role" label="Vai trò">
+            <Select options={[
+              { value: "admin", label: "Admin" },
+              { value: "staff", label: "Nhân viên" },
+              { value: "cashier", label: "Thu ngân (chỉ thu tiền)" },
+              { value: "warehouse", label: "Kho (chỉ nhận trả áo)" },
+            ]}
+            />
+          </Form.Item>
           <Form.Item name="isActive" label="Kích hoạt" valuePropName="checked"><Switch /></Form.Item>
         </Form>
       </Modal>

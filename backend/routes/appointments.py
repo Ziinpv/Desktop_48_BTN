@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, joinedload
 from backend.config.database import get_db
 from backend.models.entities import Appointment, Customer, Service, User
 from backend.services.audit import write_audit
-from backend.services.auth_service import get_current_user
+from backend.services.auth_service import get_current_user, studio_writer
 from backend.utils.ids import generate_code
 
 router = APIRouter(prefix="/api/appointments", tags=["appointments"])
@@ -52,7 +52,7 @@ def list_appts(fromDate: str = "", toDate: str = "", _: User = Depends(get_curre
 
 
 @router.post("")
-def create_appt(payload: AppointmentIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def create_appt(payload: AppointmentIn, user: User = Depends(studio_writer), db: Session = Depends(get_db)):
     if not db.query(Customer).filter(Customer.ma_kh == payload.maKH).first():
         raise HTTPException(404, "Không tìm thấy khách hàng")
     if payload.maDV and not db.query(Service).filter(Service.ma_dv == payload.maDV).first():
@@ -90,7 +90,7 @@ def create_appt(payload: AppointmentIn, user: User = Depends(get_current_user), 
 
 
 @router.put("/{code}")
-def update_appt(code: str, payload: AppointmentIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def update_appt(code: str, payload: AppointmentIn, user: User = Depends(studio_writer), db: Session = Depends(get_db)):
     row = db.query(Appointment).filter(Appointment.ma_lich == code).first()
     if not row:
         raise HTTPException(404, "Không tìm thấy lịch hẹn")
@@ -109,7 +109,7 @@ def update_appt(code: str, payload: AppointmentIn, user: User = Depends(get_curr
 
 
 @router.delete("/{code}")
-def delete_appt(code: str, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def delete_appt(code: str, user: User = Depends(studio_writer), db: Session = Depends(get_db)):
     row = db.query(Appointment).filter(Appointment.ma_lich == code).first()
     if not row:
         raise HTTPException(404, "Không tìm thấy lịch hẹn")

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Button, DatePicker, Drawer, Form, Input, Modal, Select, Space, Spin, Table, App } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
+import { useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
+import { canDo } from "../utils/roles";
 import dayjs from "dayjs";
 import api from "../services/api";
 import { errText, fmtDate } from "../utils/format";
@@ -18,6 +20,7 @@ function toForm(row) {
 export default function Customers() {
   const { t } = useTranslation();
   const { message, modal } = App.useApp();
+  const canEdit = canDo(useSelector((s) => s.auth.user?.role), "createRental");
   const [rows, setRows] = useState([]);
   const [q, setQ] = useState("");
   const [nguon, setNguon] = useState();
@@ -75,7 +78,7 @@ export default function Customers() {
         <Input.Search allowClear placeholder="Tên / mã / SĐT / cô dâu / chú rể" onSearch={setQ} onChange={(e) => !e.target.value && setQ("")} style={{ width: 280 }} />
         <Select allowClear placeholder="Nguồn khách" options={SOURCES} value={nguon} onChange={setNguon} style={{ width: 160 }} />
         <Select allowClear placeholder="Tháng cưới" options={MONTHS} value={thangCuoi} onChange={setThangCuoi} style={{ width: 140 }} />
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); setOpen(true); }}>{t("add")}</Button>
+        {canEdit ? <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); setOpen(true); }}>{t("add")}</Button> : null}
       </Space>
       <Table
         rowKey="maKH"
@@ -101,8 +104,8 @@ export default function Customers() {
             render: (_, r) => (
               <Space>
                 <Button size="small" onClick={() => openProfile(r)}>Hồ sơ</Button>
-                <Button size="small" onClick={() => { setEditing(r); form.setFieldsValue(toForm(r)); setOpen(true); }}>{t("edit")}</Button>
-                <Button size="small" danger onClick={() => modal.confirm({ title: t("confirmDelete"), onOk: async () => { try { await api.delete(`/api/customers/${r.maKH}`); message.success(t("success")); load(); } catch (e) { message.error(errText(e)); } } })}>{t("delete")}</Button>
+                {canEdit ? <Button size="small" onClick={() => { setEditing(r); form.setFieldsValue(toForm(r)); setOpen(true); }}>{t("edit")}</Button> : null}
+                {canEdit ? <Button size="small" danger onClick={() => modal.confirm({ title: t("confirmDelete"), onOk: async () => { try { await api.delete(`/api/customers/${r.maKH}`); message.success(t("success")); load(); } catch (e) { message.error(errText(e)); } } })}>{t("delete")}</Button> : null}
               </Space>
             ),
           },
