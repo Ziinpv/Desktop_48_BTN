@@ -21,17 +21,30 @@ def list_dresses(
     q: str = "",
     status: str = "",
     loai: str = "",
+    size: str = "",
+    mau: str = "",
     _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     query = db.query(Dress)
     if q:
         like = f"%{q}%"
-        query = query.filter((Dress.ten_ao.like(like)) | (Dress.ma_dress.like(like)) | (Dress.loai_ao.like(like)))
+        query = query.filter(
+            (Dress.ten_ao.like(like))
+            | (Dress.ma_dress.like(like))
+            | (Dress.loai_ao.like(like))
+            | (Dress.size.like(like))
+            | (Dress.mau.like(like))
+            | (Dress.phu_kien.like(like))
+        )
     if status:
         query = query.filter(Dress.trang_thai == status)
     if loai:
         query = query.filter(Dress.loai_ao == loai)
+    if size:
+        query = query.filter(Dress.size == size)
+    if mau:
+        query = query.filter(Dress.mau == mau)
     return [dress_out(d) for d in query.order_by(Dress.ma_dress.asc()).all()]
 
 
@@ -46,6 +59,9 @@ def create_dress(payload: DressIn, user: User = Depends(get_current_user), db: S
         loai_ao=payload.loaiAo,
         don_gia=payload.donGia,
         hinh_anh=payload.hinhAnh,
+        size=payload.size,
+        mau=payload.mau,
+        phu_kien=payload.phuKien,
         trang_thai=payload.trangThai,
         ghi_chu=payload.ghiChu,
     )
@@ -64,6 +80,9 @@ def update_dress(code: str, payload: DressIn, user: User = Depends(get_current_u
     row.loai_ao = payload.loaiAo
     row.don_gia = payload.donGia
     row.hinh_anh = payload.hinhAnh
+    row.size = payload.size
+    row.mau = payload.mau
+    row.phu_kien = payload.phuKien
     row.trang_thai = payload.trangThai
     row.ghi_chu = payload.ghiChu
     db.commit()

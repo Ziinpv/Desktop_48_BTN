@@ -7,6 +7,8 @@ import { errText, vnd } from "../utils/format";
 import StatusTag from "../components/StatusTag";
 
 const LOAI = ["Váy Cưới Luxury", "Váy Cưới Minimalist", "Áo Dài Cưới Truyền Thống", "Vest Chú Rể Cao Cấp"];
+const SIZES = ["XS", "S", "M", "L", "XL", "Freesize"];
+const COLORS = ["Trắng", "Trắng ngà", "Ivory", "Champagne", "Đỏ", "Navy", "Đen"];
 
 export default function Dresses() {
   const { t } = useTranslation();
@@ -14,16 +16,18 @@ export default function Dresses() {
   const [rows, setRows] = useState([]);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("");
+  const [size, setSize] = useState("");
+  const [mau, setMau] = useState("");
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form] = Form.useForm();
   const donGia = Form.useWatch("donGia", form);
 
   const load = async () => {
-    const { data } = await api.get("/api/dresses", { params: { q, status } });
+    const { data } = await api.get("/api/dresses", { params: { q, status, size, mau } });
     setRows(data);
   };
-  useEffect(() => { load(); }, [q, status]);
+  useEffect(() => { load(); }, [q, status, size, mau]);
 
   const onSave = async () => {
     const v = await form.validateFields();
@@ -42,10 +46,12 @@ export default function Dresses() {
     <div>
       <div className="page-head">
         <h1>Kho áo cưới</h1>
-        <p>Cọc tự động = Đơn giá × 50%</p>
+        <p>Cọc tự động = Đơn giá × 50% · Lọc size / màu / phụ kiện trước khi lập phiếu</p>
       </div>
       <Space wrap style={{ marginBottom: 16 }}>
-        <Input.Search allowClear placeholder="Mã / tên / loại áo" onSearch={setQ} onChange={(e) => !e.target.value && setQ("")} />
+        <Input.Search allowClear placeholder="Mã / tên / loại / phụ kiện" onSearch={setQ} onChange={(e) => !e.target.value && setQ("")} />
+        <Select allowClear placeholder="Size" style={{ width: 110 }} value={size || undefined} onChange={(v) => setSize(v || "")} options={SIZES.map((x) => ({ value: x, label: x }))} />
+        <Select allowClear placeholder="Màu" style={{ width: 140 }} value={mau || undefined} onChange={(v) => setMau(v || "")} options={COLORS.map((x) => ({ value: x, label: x }))} />
         <Select allowClear placeholder="Trạng thái" style={{ width: 180 }} value={status || undefined} onChange={(v) => setStatus(v || "")} options={[{ value: "SAN_SANG", label: "Còn hàng" }, { value: "DANG_THUE", label: "Đang thuê" }, { value: "HET_HANG", label: "Hết hàng" }, { value: "HON_HOC", label: "Hỏng hóc" }]} />
         <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditing(null); form.resetFields(); form.setFieldsValue({ donGia: 0, trangThai: "SAN_SANG" }); setOpen(true); }}>{t("add")}</Button>
       </Space>
@@ -57,6 +63,9 @@ export default function Dresses() {
           { title: "Ảnh", dataIndex: "hinhAnh", render: (u) => u ? <img className="thumb" src={u} alt="" /> : "—" },
           { title: "Tên áo", dataIndex: "tenAo" },
           { title: "Loại", dataIndex: "loaiAo" },
+          { title: "Size", dataIndex: "size", width: 80 },
+          { title: "Màu", dataIndex: "mau", width: 110 },
+          { title: "Phụ kiện", dataIndex: "phuKien", ellipsis: true },
           { title: "Đơn giá", dataIndex: "donGia", render: vnd },
           { title: "Cọc 50%", dataIndex: "tienCoc", render: vnd },
           { title: "Kho", dataIndex: "trangThai", render: (v) => <StatusTag value={v} /> },
@@ -75,6 +84,9 @@ export default function Dresses() {
         <Form form={form} layout="vertical">
           <Form.Item name="tenAo" label="Tên áo" rules={[{ required: true }]}><Input /></Form.Item>
           <Form.Item name="loaiAo" label="Loại áo" rules={[{ required: true }]}><Select options={LOAI.map((x) => ({ value: x, label: x }))} /></Form.Item>
+          <Form.Item name="size" label="Size"><Select allowClear options={SIZES.map((x) => ({ value: x, label: x }))} /></Form.Item>
+          <Form.Item name="mau" label="Màu"><Select allowClear options={COLORS.map((x) => ({ value: x, label: x }))} /></Form.Item>
+          <Form.Item name="phuKien" label="Phụ kiện đi kèm"><Input placeholder="Voan, găng tay, vương miện..." /></Form.Item>
           <Form.Item name="donGia" label="Đơn giá" rules={[{ required: true, type: "number", min: 0 }]}><InputNumber min={0} style={{ width: "100%" }} /></Form.Item>
           <p>Tiền cọc đề xuất: <strong>{vnd((donGia || 0) * 0.5)}</strong></p>
           <Form.Item name="hinhAnh" label="Ảnh URL"><Input /></Form.Item>

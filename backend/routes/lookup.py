@@ -28,7 +28,14 @@ def lookup_dress(q: str, _: User = Depends(get_current_user), db: Session = Depe
     like = f"%{q.strip()}%"
     dresses = (
         db.query(Dress)
-        .filter((Dress.ma_dress.like(like)) | (Dress.ten_ao.like(like)) | (Dress.loai_ao.like(like)))
+        .filter(
+            (Dress.ma_dress.like(like))
+            | (Dress.ten_ao.like(like))
+            | (Dress.loai_ao.like(like))
+            | (Dress.size.like(like))
+            | (Dress.mau.like(like))
+            | (Dress.phu_kien.like(like))
+        )
         .all()
     )
     result = []

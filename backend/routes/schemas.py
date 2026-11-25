@@ -44,6 +44,9 @@ class DressIn(BaseModel):
     loaiAo: str
     donGia: float = Field(ge=0)
     hinhAnh: Optional[str] = ""
+    size: Optional[str] = ""
+    mau: Optional[str] = ""
+    phuKien: Optional[str] = ""
     trangThai: str = "SAN_SANG"
     ghiChu: Optional[str] = ""
 
@@ -145,6 +148,9 @@ def dress_out(row) -> dict:
         "donGia": row.don_gia,
         "tienCoc": round((row.don_gia or 0) * 0.5, 0),
         "hinhAnh": row.hinh_anh,
+        "size": row.size or "",
+        "mau": row.mau or "",
+        "phuKien": row.phu_kien or "",
         "trangThai": row.trang_thai,
         "ghiChu": row.ghi_chu,
         "createdAt": row.created_at.isoformat() if row.created_at else None,

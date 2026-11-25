@@ -15,6 +15,8 @@ export default function Rentals() {
   const [customers, setCustomers] = useState([]);
   const [dresses, setDresses] = useState([]);
   const [status, setStatus] = useState("");
+  const [filterSize, setFilterSize] = useState();
+  const [filterMau, setFilterMau] = useState();
   const [open, setOpen] = useState(false);
   const [payRow, setPayRow] = useState(null);
   const [form] = Form.useForm();
@@ -32,7 +34,12 @@ export default function Rentals() {
   };
   useEffect(() => { load(); }, [status]);
 
-  const available = dresses.filter((d) => d.trangThai === "SAN_SANG" || selected.includes(d.maDress));
+  const available = dresses.filter((d) => {
+    if (!(d.trangThai === "SAN_SANG" || selected.includes(d.maDress))) return false;
+    if (filterSize && d.size !== filterSize) return false;
+    if (filterMau && d.mau !== filterMau) return false;
+    return true;
+  });
   const summary = useMemo(() => {
     const items = dresses.filter((d) => selected.includes(d.maDress));
     const rent = items.reduce((s, d) => s + d.donGia, 0);
@@ -118,6 +125,10 @@ export default function Rentals() {
             <Form.Item name="ngayThue" label="Ngày thuê" rules={[{ required: true }]}><DatePicker /></Form.Item>
             <Form.Item name="ngayTraDuKien" label="Ngày trả dự kiến" rules={[{ required: true }]}><DatePicker /></Form.Item>
           </Space>
+          <Space style={{ marginBottom: 8 }}>
+            <Select allowClear placeholder="Lọc size" style={{ width: 120 }} value={filterSize} onChange={setFilterSize} options={[...new Set(dresses.map((d) => d.size).filter(Boolean))].map((x) => ({ value: x, label: x }))} />
+            <Select allowClear placeholder="Lọc màu" style={{ width: 140 }} value={filterMau} onChange={setFilterMau} options={[...new Set(dresses.map((d) => d.mau).filter(Boolean))].map((x) => ({ value: x, label: x }))} />
+          </Space>
           <Form.Item name="dresses" label="Chọn bộ áo (tối đa 3)" rules={[{ required: true }]}>
             <Checkbox.Group
               onChange={(vals) => {
@@ -133,7 +144,7 @@ export default function Rentals() {
               <div style={{ display: "grid", gap: 8 }}>
                 {available.map((d) => (
                   <Checkbox key={d.maDress} value={d.maDress} disabled={d.trangThai === "HON_HOC"}>
-                    <strong>{d.maDress}</strong> · {d.tenAo} · thuê {vnd(d.donGia)} · cọc {vnd(d.tienCoc)}
+                    <strong>{d.maDress}</strong> · {d.tenAo} · {d.size || "?"} · {d.mau || "?"} {d.phuKien ? `· PK: ${d.phuKien}` : ""} · thuê {vnd(d.donGia)} · cọc {vnd(d.tienCoc)}
                     {d.trangThai === "HON_HOC" ? " (hỏng hóc)" : ""}
                   </Checkbox>
                 ))}

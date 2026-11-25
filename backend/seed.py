@@ -124,17 +124,17 @@ def _seed(db: Session):
         )
 
     dresses = [
-        ("AC001", "Váy Cưới Luxury Hoàng Gia Đính Pha Lê Swarovski", "Váy Cưới Luxury", 3500000, "DANG_THUE"),
-        ("AC002", "Váy Cưới Đuôi Cá Satin Phong Cách Pháp", "Váy Cưới Luxury", 2800000, "SAN_SANG"),
-        ("AC003", "Áo Dài Cưới Gấm Đỏ Thêu Phượng Hoàng", "Áo Dài Cưới Truyền Thống", 1200000, "DANG_THUE"),
-        ("AC004", "Áo Dài Cặp Đôi Tơ Tằm Trắng Tinh Khôi", "Áo Dài Cưới Truyền Thống", 1800000, "SAN_SANG"),
-        ("AC005", "Bộ Vest Chú Rể Tuxedo Đen Ý Sang Trọng", "Vest Chú Rể Cao Cấp", 1500000, "DANG_THUE"),
-        ("AC006", "Bộ Vest Chú Rể Xanh Navy Form Slimfit", "Vest Chú Rể Cao Cấp", 1200000, "SAN_SANG"),
-        ("AC007", "Váy Cưới Chữ A Voan Mềm Bồng Bềnh Hàn Quốc", "Váy Cưới Minimalist", 2000000, "SAN_SANG"),
-        ("AC008", "Váy Cưới Xòe Cúp Ngực Đính Ngọc Trai", "Váy Cưới Luxury", 4000000, "DANG_THUE"),
-        ("AC009", "Váy Cưới Minimalist Lụa Ý Cúp Ngực", "Váy Cưới Minimalist", 2200000, "HON_HOC"),
+        ("AC001", "Váy Cưới Luxury Hoàng Gia Đính Pha Lê Swarovski", "Váy Cưới Luxury", 3500000, "DANG_THUE", "S", "Trắng ngà", "Voan, găng tay, vương miện"),
+        ("AC002", "Váy Cưới Đuôi Cá Satin Phong Cách Pháp", "Váy Cưới Luxury", 2800000, "SAN_SANG", "M", "Ivory", "Găng tay dài, hoa cầm tay"),
+        ("AC003", "Áo Dài Cưới Gấm Đỏ Thêu Phượng Hoàng", "Áo Dài Cưới Truyền Thống", 1200000, "DANG_THUE", "M", "Đỏ", "Khăn đóng, quạt lụa"),
+        ("AC004", "Áo Dài Cặp Đôi Tơ Tằm Trắng Tinh Khôi", "Áo Dài Cưới Truyền Thống", 1800000, "SAN_SANG", "L", "Trắng", "Nón lá, hoa cài"),
+        ("AC005", "Bộ Vest Chú Rể Tuxedo Đen Ý Sang Trọng", "Vest Chú Rể Cao Cấp", 1500000, "DANG_THUE", "L", "Đen", "Nơ, khăn túi, khuy cài"),
+        ("AC006", "Bộ Vest Chú Rể Xanh Navy Form Slimfit", "Vest Chú Rể Cao Cấp", 1200000, "SAN_SANG", "M", "Navy", "Cà vạt, khăn túi"),
+        ("AC007", "Váy Cưới Chữ A Voan Mềm Bồng Bềnh Hàn Quốc", "Váy Cưới Minimalist", 2000000, "SAN_SANG", "S", "Trắng", "Hoa voan, găng tay"),
+        ("AC008", "Váy Cưới Xòe Cúp Ngực Đính Ngọc Trai", "Váy Cưới Luxury", 4000000, "DANG_THUE", "M", "Champagne", "Vương miện ngọc trai"),
+        ("AC009", "Váy Cưới Minimalist Lụa Ý Cúp Ngực", "Váy Cưới Minimalist", 2200000, "HON_HOC", "S", "Ivory", "Dây lưng lụa"),
     ]
-    for code, name, loai, price, status in dresses:
+    for code, name, loai, price, status, size, color, accessory in dresses:
         db.add(
             Dress(
                 ma_dress=code,
@@ -142,6 +142,9 @@ def _seed(db: Session):
                 loai_ao=loai,
                 don_gia=price,
                 hinh_anh=DRESS_IMAGES.get(code, DRESS_IMAGES["AC001"]),
+                size=size,
+                mau=color,
+                phu_kien=accessory,
                 trang_thai=status,
                 ghi_chu="Hỏng khóa kéo, chờ sửa" if status == "HON_HOC" else "",
             )
