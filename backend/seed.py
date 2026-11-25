@@ -101,14 +101,27 @@ def _seed(db: Session):
         )
 
     customers = [
-        ("KH001", "Nguyễn Thị Lan Anh", "0912345678", "Phường 2, TP. Đà Lạt", "lananh@example.com"),
-        ("KH002", "Trần Văn Hùng", "0987654321", "Phường 8, TP. Đà Lạt", "hung.tran@example.com"),
-        ("KH003", "Phạm Quỳnh Nga", "0905123987", "Phường 1, TP. Đà Lạt", "quynhnga@example.com"),
-        ("KH004", "Lê Hoàng Nam", "0934567890", "Phường 9, TP. Đà Lạt", "hoangnam@example.com"),
-        ("KH005", "Võ Minh Châu", "0978123456", "Phường 3, TP. Đà Lạt", "minhchau@example.com"),
+        ("KH001", "Nguyễn Thị Lan Anh", "0912345678", "Phường 2, TP. Đà Lạt", "lananh@example.com", "Nguyễn Thị Lan Anh", "Trần Quốc Bảo", date(2026, 12, 20), "Facebook"),
+        ("KH002", "Trần Văn Hùng", "0987654321", "Phường 8, TP. Đà Lạt", "hung.tran@example.com", "Lê Thu Hà", "Trần Văn Hùng", date(2026, 1, 18), "Giới thiệu"),
+        ("KH003", "Phạm Quỳnh Nga", "0905123987", "Phường 1, TP. Đà Lạt", "quynhnga@example.com", "Phạm Quỳnh Nga", "Đỗ Minh Khang", date(2026, 11, 8), "TikTok"),
+        ("KH004", "Lê Hoàng Nam", "0934567890", "Phường 9, TP. Đà Lạt", "hoangnam@example.com", "Ngô Mỹ Linh", "Lê Hoàng Nam", date(2027, 2, 14), "Walk-in"),
+        ("KH005", "Võ Minh Châu", "0978123456", "Phường 3, TP. Đà Lạt", "minhchau@example.com", "Võ Minh Châu", "Phan Gia Huy", date(2026, 12, 5), "Facebook"),
     ]
-    for code, name, phone, addr, email in customers:
-        db.add(Customer(ma_kh=code, ten_kh=name, sdt=phone, dia_chi=addr, email=email, ngay_tao=datetime.utcnow()))
+    for code, name, phone, addr, email, bride, groom, wedding, source in customers:
+        db.add(
+            Customer(
+                ma_kh=code,
+                ten_kh=name,
+                sdt=phone,
+                dia_chi=addr,
+                email=email,
+                ten_vo=bride,
+                ten_chong=groom,
+                ngay_cuoi=wedding,
+                nguon_khach=source,
+                ngay_tao=datetime.utcnow(),
+            )
+        )
 
     dresses = [
         ("AC001", "Váy Cưới Luxury Hoàng Gia Đính Pha Lê Swarovski", "Váy Cưới Luxury", 3500000, "DANG_THUE"),

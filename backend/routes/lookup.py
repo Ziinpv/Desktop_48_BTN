@@ -66,7 +66,13 @@ def lookup_customer(q: str, _: User = Depends(get_current_user), db: Session = D
     like = f"%{q.strip()}%"
     customers = (
         db.query(Customer)
-        .filter((Customer.ma_kh.like(like)) | (Customer.ten_kh.like(like)) | (Customer.sdt.like(like)))
+        .filter(
+            (Customer.ma_kh.like(like))
+            | (Customer.ten_kh.like(like))
+            | (Customer.sdt.like(like))
+            | (Customer.ten_vo.like(like))
+            | (Customer.ten_chong.like(like))
+        )
         .all()
     )
     result = []

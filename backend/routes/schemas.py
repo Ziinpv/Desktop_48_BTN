@@ -32,6 +32,10 @@ class CustomerIn(BaseModel):
     sdt: Optional[str] = ""
     diaChi: Optional[str] = ""
     email: Optional[str] = ""
+    tenVo: Optional[str] = ""
+    tenChong: Optional[str] = ""
+    ngayCuoi: Optional[str] = None
+    nguonKhach: Optional[str] = ""
 
 
 class DressIn(BaseModel):
@@ -112,6 +116,12 @@ def service_out(row) -> dict:
     }
 
 
+def parse_optional_date(value: Optional[str]):
+    if not value:
+        return None
+    return date.fromisoformat(str(value)[:10])
+
+
 def customer_out(row) -> dict:
     return {
         "maKH": row.ma_kh,
@@ -119,6 +129,10 @@ def customer_out(row) -> dict:
         "sdt": row.sdt,
         "diaChi": row.dia_chi,
         "email": row.email,
+        "tenVo": row.ten_vo or "",
+        "tenChong": row.ten_chong or "",
+        "ngayCuoi": row.ngay_cuoi.isoformat() if row.ngay_cuoi else None,
+        "nguonKhach": row.nguon_khach or "",
         "ngayTao": row.ngay_tao.isoformat() if row.ngay_tao else None,
     }
 

@@ -13,7 +13,12 @@ export default function CustomerProfile({ customer }) {
 
   return (
     <div>
+      <Typography.Paragraph style={{ marginBottom: 4 }}>
+        {[customer.tenVo, customer.tenChong].filter(Boolean).join(" & ") || customer.tenKH}
+      </Typography.Paragraph>
       <Typography.Paragraph type="secondary" style={{ marginBottom: 16 }}>
+        Ngày cưới: {fmtDate(customer.ngayCuoi)} · Nguồn: {customer.nguonKhach || "—"}
+        <br />
         {customer.sdt || "—"} · {customer.email || "—"} · {customer.diaChi || "—"}
       </Typography.Paragraph>
       <div className="kpi-grid" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
