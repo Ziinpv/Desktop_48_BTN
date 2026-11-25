@@ -20,6 +20,7 @@ import Reports from "./pages/Reports";
 import Users from "./pages/Users";
 import AuditLogs from "./pages/AuditLogs";
 import Settings from "./pages/Settings";
+import Appointments from "./pages/Appointments";
 
 function Guard({ children }) {
   const token = useSelector((s) => s.auth.token);
@@ -62,6 +63,7 @@ export default function App() {
             <Route path="dresses" element={<Dresses />} />
             <Route path="customers" element={<Customers />} />
             <Route path="rentals" element={<Rentals />} />
+            <Route path="appointments" element={<Appointments />} />
             <Route path="unreturned" element={<Unreturned />} />
             <Route path="overdue" element={<Overdue />} />
             <Route path="dress-lookup" element={<DressLookup />} />

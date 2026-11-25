@@ -59,7 +59,10 @@ export default function AppLayout() {
       {
         type: "group",
         label: t("rentalBiz"),
-        children: [{ key: "/rentals", icon: <FileProtectOutlined />, label: t("rentals") }],
+        children: [
+          { key: "/rentals", icon: <FileProtectOutlined />, label: t("rentals") },
+          { key: "/appointments", icon: <CameraOutlined />, label: "Lịch hẹn chụp" },
+        ],
       },
       {
         type: "group",

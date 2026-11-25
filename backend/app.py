@@ -19,6 +19,7 @@ if str(ROOT) not in sys.path:
 from backend.config.database import Base, engine  # noqa: E402
 from backend.config.settings import settings  # noqa: E402
 from backend.routes import (  # noqa: E402
+    appointments,
     auth,
     customers,
     dresses,
@@ -71,6 +72,7 @@ app.include_router(reports.router)
 app.include_router(lookup.router)
 app.include_router(export.router)
 app.include_router(payments.router)
+app.include_router(appointments.router)
 app.include_router(system.router)
 
 ensure_schema()
