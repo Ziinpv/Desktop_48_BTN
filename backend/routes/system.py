@@ -2,14 +2,15 @@ import logging
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from backend.config.database import get_db
 from backend.config.settings import settings
-from backend.models.entities import AuditLog, User
+from backend.models.entities import AuditLog, DressRental, DressRentalItem, User
 from backend.services.auth_service import get_current_user, require_admin
 from backend.services.backup import backup_database, list_backups, restore_backup
-from backend.services.rental_service import refresh_overdue
+from backend.services.reminder_service import remind_contracts, sms_configured, smtp_configured
+from backend.services.rental_service import refresh_overdue, serialize_rental
 
 router = APIRouter(prefix="/api/system", tags=["system"])
 
@@ -72,4 +73,29 @@ def get_settings(_: User = Depends(get_current_user)):
         "dbPath": str(settings.db_path),
         "backupDir": str(settings.backup_dir),
         "cloudSyncDir": str(settings.cloud_sync_dir) if settings.cloud_sync_dir else "",
+        "smtpConfigured": smtp_configured(),
+        "smsConfigured": sms_configured(),
     }
+
+
+@router.post("/remind")
+def remind(payload: dict, _: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    channels = [c for c in (payload.get("channels") or []) if c in ("email", "sms")]
+    if not channels:
+        raise HTTPException(400, "Chọn kênh email hoặc SMS")
+    refresh_overdue(db)
+    query = db.query(DressRental).options(
+        joinedload(DressRental.items).joinedload(DressRentalItem.dress),
+        joinedload(DressRental.customer),
+        joinedload(DressRental.history),
+        joinedload(DressRental.payments),
+    )
+    codes = payload.get("contracts") or []
+    if codes:
+        rows = query.filter(DressRental.ma_hop_dong.in_(codes)).all()
+    else:
+        rows = query.filter(DressRental.trang_thai.in_(("DANG_THUE", "QUA_HAN"))).all()
+    data = [serialize_rental(r) for r in rows]
+    if not codes:
+        data = [r for r in data if r.get("sapHetHan") or r.get("trangThai") == "QUA_HAN"]
+    return remind_contracts(data, channels)

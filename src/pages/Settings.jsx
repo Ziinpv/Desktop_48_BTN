@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Button, Card, Form, Input, List, Space, Typography, App } from "antd";
+import { Button, Card, Form, Input, List, Space, Switch, Typography, App } from "antd";
 import api from "../services/api";
 import { errText } from "../utils/format";
 
@@ -7,6 +7,7 @@ export default function Settings() {
   const { message, modal } = App.useApp();
   const [info, setInfo] = useState(null);
   const [backups, setBackups] = useState([]);
+  const [desktopNotify, setDesktopNotify] = useState(localStorage.getItem("luxe-desktop-notify") !== "off");
   const [form] = Form.useForm();
 
   const load = async () => {
@@ -41,10 +42,22 @@ export default function Settings() {
               <li>Tỷ lệ cọc: <strong>{info.depositRate * 100}%</strong></li>
               <li>Phí trễ hạn: <strong>{info.lateFeeRate * 100}%</strong> × số ngày</li>
               <li>Cảnh báo sắp hết hạn: <strong>{info.dueSoonDays} ngày</strong></li>
+              <li>SMTP email: <strong>{info.smtpConfigured ? "Đã cấu hình" : "Chưa (LUXE_SMTP_HOST / FROM)"}</strong></li>
+              <li>SMS webhook: <strong>{info.smsConfigured ? "Đã cấu hình" : "Chưa (LUXE_SMS_WEBHOOK)"}</strong></li>
               <li>CSDL: {info.dbPath}</li>
               <li>Thư mục backup: {info.backupDir}</li>
             </ul>
           )}
+          <Space style={{ marginBottom: 12 }}>
+            <Switch
+              checked={desktopNotify}
+              onChange={(v) => {
+                setDesktopNotify(v);
+                localStorage.setItem("luxe-desktop-notify", v ? "on" : "off");
+              }}
+            />
+            Thông báo desktop khi mở app
+          </Space>
           <Space>
             <Button type="primary" onClick={async () => { const { data } = await api.post("/api/system/backup"); message.success(data.ok ? "Đã sao lưu" : data.message); load(); }}>Sao lưu ngay</Button>
             <Button onClick={() => window.luxeDesktop?.openPath?.(info?.backupDir)}>Mở thư mục backup</Button>

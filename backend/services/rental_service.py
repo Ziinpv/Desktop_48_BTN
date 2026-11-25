@@ -172,6 +172,7 @@ def serialize_rental(rental: DressRental, today: date | None = None) -> dict:
         "items": items,
         "soBo": len(items),
         "soNgayTre": late,
+        "ngayConLai": (rental.ngay_tra_du_kien - today).days if rental.ngay_tra_du_kien else None,
         "phiTreHan": phi_tre,
         "sapHetHan": sap_het,
         "boAo": ", ".join(f"{i['maDress']} · {i['tenAo']}" for i in items),

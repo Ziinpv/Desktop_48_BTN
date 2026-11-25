@@ -78,6 +78,13 @@ def overdue(_: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return [serialize_rental(r) for r in rows]
 
 
+@router.get("/due-soon")
+def due_soon(_: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    rows = _loaded(db).filter(DressRental.trang_thai.in_(ACTIVE_RENTAL_STATUSES)).all()
+    data = [serialize_rental(r) for r in rows]
+    return [r for r in data if r.get("sapHetHan") or r.get("trangThai") == "QUA_HAN"]
+
+
 @router.get("/charts")
 def charts(_: User = Depends(get_current_user), db: Session = Depends(get_db)):
     year = date.today().year

@@ -20,13 +20,19 @@ export default function Unreturned() {
     <div>
       <div className="page-head">
         <h1>F5 · Khách hàng thuê chưa trả</h1>
-        <p>Highlight hợp đồng sắp hết hạn trong 3 ngày · Xuất CSV / Excel / PDF</p>
+        <p>Hợp đồng còn ≤ 3 ngày được tô cam · Desktop / email / SMS nhắc khách khi studio bật</p>
       </div>
       <Space style={{ marginBottom: 16 }} wrap>
         <Select value={sort} onChange={setSort} options={[{ value: "date", label: "Theo hạn trả" }, { value: "customer", label: "Theo tên khách" }]} />
         <Button icon={<DownloadOutlined />} onClick={() => downloadFile("/api/export/unreturned.csv", "chua-tra.csv")}>CSV</Button>
         <Button onClick={() => downloadFile("/api/export/unreturned.xlsx", "chua-tra.xlsx")}>Excel</Button>
         <Button onClick={() => downloadFile("/api/export/unreturned.pdf", "chua-tra.pdf")}>PDF</Button>
+        <Button onClick={async () => {
+          try {
+            const { data } = await api.post("/api/system/remind", { channels: ["email", "sms"] });
+            message.success(`Đã gửi ${data.sent} nhắc hạn (email/SMS). Thất bại: ${data.failed}`);
+          } catch (e) { message.error(errText(e)); }
+        }}>Gửi email/SMS nhắc hạn</Button>
       </Space>
       <Table
         rowKey="maHopDong"
@@ -39,6 +45,12 @@ export default function Unreturned() {
           { title: "Bộ áo", dataIndex: "items", render: (items) => items.map((i) => `${i.maDress} ${i.tenAo}`).join("; ") },
           { title: "Ngày thuê", dataIndex: "ngayThue", render: fmtDate, sorter: (a, b) => a.ngayThue.localeCompare(b.ngayThue) },
           { title: "Dự kiến trả", dataIndex: "ngayTraDuKien", render: fmtDate },
+          {
+            title: "Còn lại",
+            dataIndex: "ngayConLai",
+            width: 110,
+            render: (v, r) => (r.trangThai === "QUA_HAN" ? `Trễ ${r.soNgayTre} ngày` : `${v} ngày`),
+          },
           { title: "Cọc", dataIndex: "tienCoc", render: vnd },
           { title: "TT", dataIndex: "trangThai", render: (v, r) => <>{<StatusTag value={v} />}{r.sapHetHan ? " · sắp hết hạn" : ""}</> },
           {

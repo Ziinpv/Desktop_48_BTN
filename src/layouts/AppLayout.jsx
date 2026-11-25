@@ -22,6 +22,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useTranslation } from "react-i18next";
 import { logout } from "../store/authSlice";
+import DueReminders from "../components/DueReminders";
 import { setCollapsed, setLang, toggleTheme } from "../store/uiSlice";
 import i18n from "../i18n";
 
@@ -142,6 +143,7 @@ export default function AppLayout() {
           </Space>
         </Header>
         <Content className={`luxe-content${dark ? " dark" : ""}`}>
+          <DueReminders />
           <div className="page-wrap">
             <Outlet />
           </div>

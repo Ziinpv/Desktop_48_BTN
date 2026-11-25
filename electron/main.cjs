@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, Notification, shell, dialog } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
@@ -111,6 +111,19 @@ function registerIpc() {
   ipcMain.handle("app:print", async () => {
     if (!mainWindow) return { ok: false };
     mainWindow.webContents.print({ silent: false });
+    return { ok: true };
+  });
+  ipcMain.handle("app:notify", (_e, { title, body }) => {
+    if (!Notification.isSupported()) return { ok: false };
+    const n = new Notification({ title: title || "LUXE WEDDING STUDIO", body: body || "" });
+    n.on("click", () => {
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    });
+    n.show();
     return { ok: true };
   });
   ipcMain.handle("app:save-file", async (_e, { defaultPath, data, encoding }) => {

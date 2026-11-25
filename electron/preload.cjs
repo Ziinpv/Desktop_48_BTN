@@ -6,4 +6,5 @@ contextBridge.exposeInMainWorld("luxeDesktop", {
   chooseFolder: () => ipcRenderer.invoke("app:choose-folder"),
   print: () => ipcRenderer.invoke("app:print"),
   saveFile: (payload) => ipcRenderer.invoke("app:save-file", payload),
+  notify: (payload) => ipcRenderer.invoke("app:notify", payload),
 });
