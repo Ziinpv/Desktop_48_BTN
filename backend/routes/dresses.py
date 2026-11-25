@@ -114,11 +114,13 @@ def dress_qr(code: str, _: User = Depends(get_current_user), db: Session = Depen
     row = db.query(Dress).filter(Dress.ma_dress == code).first()
     if not row:
         raise HTTPException(404, "Không tìm thấy bộ áo")
-    img = qrcode.make(f"LUXE|{row.ma_dress}|{row.ten_ao}")
+    payload = f"LUXE|DRESS|{row.ma_dress}"
+    img = qrcode.make(payload)
     buf = io.BytesIO()
     img.save(buf, format="PNG")
     return {
         "maDress": row.ma_dress,
         "tenAo": row.ten_ao,
+        "payload": payload,
         "qr": "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode(),
     }

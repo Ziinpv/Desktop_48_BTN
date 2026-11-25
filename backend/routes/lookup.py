@@ -17,8 +17,8 @@ from backend.models.entities import (
 from backend.routes.schemas import ServiceUsageIn, customer_out, dress_out, service_out
 from backend.services.audit import write_audit
 from backend.services.auth_service import get_current_user
-from backend.services.rental_service import serialize_rental
-from backend.services.rules import calc_late_fee, days_late
+from backend.services.rental_service import refresh_overdue, serialize_rental
+from backend.services.rules import ACTIVE_RENTAL_STATUSES, calc_late_fee, days_late
 
 router = APIRouter(prefix="/api/lookup", tags=["lookup"])
 
@@ -155,6 +155,64 @@ def lookup_customer(q: str, _: User = Depends(get_current_user), db: Session = D
         ]
         result.append(item)
     return result
+
+
+def parse_qr(raw: str) -> dict:
+    text = (raw or "").strip()
+    parts = [p.strip() for p in text.split("|") if p.strip()]
+    dress_code = ""
+    hd_code = ""
+    if parts and parts[0].upper() == "LUXE":
+        kind = parts[1].upper() if len(parts) > 1 else ""
+        if kind in ("DRESS", "AO") and len(parts) > 2:
+            dress_code = parts[2].upper()
+        elif kind in ("HD", "HOPDONG") and len(parts) > 2:
+            hd_code = parts[2].upper()
+        elif len(parts) > 1:
+            dress_code = parts[1].upper()
+    elif text.upper().startswith("HD"):
+        hd_code = text.upper()
+    else:
+        dress_code = text.upper()
+    return {"dress": dress_code, "hopDong": hd_code}
+
+
+@router.get("/qr")
+def lookup_qr(q: str, _: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    parsed = parse_qr(q)
+    refresh_overdue(db)
+    rental = None
+    if parsed["hopDong"]:
+        rental = (
+            db.query(DressRental)
+            .options(
+                joinedload(DressRental.items).joinedload(DressRentalItem.dress),
+                joinedload(DressRental.customer),
+                joinedload(DressRental.history),
+                joinedload(DressRental.payments),
+            )
+            .filter(DressRental.ma_hop_dong == parsed["hopDong"])
+            .first()
+        )
+    if not rental and parsed["dress"]:
+        rental = (
+            db.query(DressRental)
+            .join(DressRentalItem, DressRentalItem.ma_hop_dong == DressRental.ma_hop_dong)
+            .options(
+                joinedload(DressRental.items).joinedload(DressRentalItem.dress),
+                joinedload(DressRental.customer),
+                joinedload(DressRental.history),
+                joinedload(DressRental.payments),
+            )
+            .filter(DressRentalItem.ma_dress == parsed["dress"], DressRental.trang_thai.in_(ACTIVE_RENTAL_STATUSES))
+            .order_by(DressRental.created_at.desc())
+            .first()
+        )
+    if not rental:
+        raise HTTPException(404, "Không tìm thấy hợp đồng đang thuê cho mã này")
+    data = serialize_rental(rental)
+    data["qr"] = parsed
+    return data
 
 
 @router.post("/service-usage")

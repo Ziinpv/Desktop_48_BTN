@@ -137,6 +137,11 @@ function registerIpc() {
 
 app.whenReady().then(async () => {
   registerIpc();
+  app.on("web-contents-created", (_e, contents) => {
+    contents.session.setPermissionRequestHandler((_wc, permission, cb) => {
+      cb(["media", "notifications"].includes(permission));
+    });
+  });
   try {
     await waitForHealth("http://127.0.0.1:8000/api/health", 2500);
   } catch {

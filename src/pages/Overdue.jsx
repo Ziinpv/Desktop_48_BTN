@@ -4,11 +4,13 @@ import { DownloadOutlined } from "@ant-design/icons";
 import api, { downloadFile } from "../services/api";
 import { errText, fmtDate, vnd } from "../utils/format";
 import PaymentPanel from "../components/PaymentPanel";
+import QrScanBar from "../components/QrScanBar";
 
 export default function Overdue() {
   const { message, modal } = App.useApp();
   const [rows, setRows] = useState([]);
   const [payRow, setPayRow] = useState(null);
+  const [active, setActive] = useState(null);
 
   const load = async () => {
     const { data } = await api.get("/api/reports/overdue");
@@ -20,7 +22,20 @@ export default function Overdue() {
     <div>
       <div className="page-head">
         <h1>F6 · Quá hạn & phí phạt</h1>
-        <p>Phí trễ hạn = Đơn giá × 10% × số ngày trễ (cộng dồn theo từng bộ áo)</p>
+        <p>Phí trễ hạn = Đơn giá × 10% × số ngày trễ · Quét QR áo (F7) để mở đúng hợp đồng thay vì gõ mã</p>
+      </div>
+      <div style={{ marginBottom: 16 }}>
+        <QrScanBar
+          onFound={async (code) => {
+            try {
+              const { data } = await api.get("/api/lookup/qr", { params: { q: code } });
+              setActive(data);
+              message.success(`Đã mở ${data.maHopDong} · ${data.tenKH}`);
+            } catch (e) {
+              message.error(errText(e));
+            }
+          }}
+        />
       </div>
       <Space style={{ marginBottom: 16 }}>
         <Button icon={<DownloadOutlined />} onClick={() => downloadFile("/api/export/overdue.csv", "qua-han.csv")}>CSV</Button>
@@ -30,7 +45,10 @@ export default function Overdue() {
       <Table
         rowKey="maHopDong"
         dataSource={rows}
-        rowClassName="overdue-row"
+        rowClassName={(r) => (active?.maHopDong === r.maHopDong ? "overdue-row" : "overdue-row")}
+        onRow={(r) => ({
+          style: active?.maHopDong === r.maHopDong ? { outline: "2px solid #c59b27" } : undefined,
+        })}
         columns={[
           { title: "Mã HĐ", dataIndex: "maHopDong" },
           { title: "Khách", dataIndex: "tenKH" },
@@ -58,6 +76,36 @@ export default function Overdue() {
           },
         ]}
       />
+      <Drawer
+        title={active ? `Hợp đồng ${active.maHopDong} · ${active.tenKH}` : "Hợp đồng"}
+        open={!!active}
+        onClose={() => setActive(null)}
+        width={760}
+        extra={active ? (
+          <Space>
+            <Button onClick={() => setPayRow(active)}>Sổ thu</Button>
+            <Button onClick={async () => { try { await api.post(`/api/rentals/${active.maHopDong}/pay-penalty`); message.success("Đã ghi nhận thanh toán phí"); load(); } catch (e) { message.error(errText(e)); } }}>Thanh toán phí</Button>
+            <Button type="primary" danger onClick={() => modal.confirm({
+              title: "Xác nhận trả lại?",
+              content: `Phí phạt ${vnd(active.phiTreHan)}`,
+              onOk: async () => {
+                try { await api.post(`/api/rentals/${active.maHopDong}/return`, {}); message.success("Đã nhận trả"); setActive(null); load(); }
+                catch (e) { message.error(errText(e)); }
+              },
+            })}>Xác nhận trả</Button>
+          </Space>
+        ) : null}
+      >
+        {active && (
+          <div>
+            <p>Khách: <strong>{active.tenKH}</strong> · {active.sdt}</p>
+            <p>Bộ áo: {active.boAo}</p>
+            <p>Hạn trả: {fmtDate(active.ngayTraDuKien)} · Trễ {active.soNgayTre || 0} ngày · Phí {vnd(active.phiTreHan)}</p>
+            <p>Còn nợ: <strong>{vnd(active.conNo)}</strong></p>
+            <PaymentPanel rental={active} onChanged={load} />
+          </div>
+        )}
+      </Drawer>
       <Drawer title={payRow ? `Sổ thanh toán · ${payRow.maHopDong}` : "Sổ thanh toán"} open={!!payRow} onClose={() => setPayRow(null)} width={720}>
         {payRow && <PaymentPanel rental={payRow} onChanged={load} />}
       </Drawer>

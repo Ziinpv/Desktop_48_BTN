@@ -57,7 +57,7 @@ export default function DressLookup() {
               {qr?.maDress === d.maDress && (
                 <div style={{ marginTop: 12 }}>
                   <Image src={qr.qr} width={160} />
-                  <div>{qr.maDress}</div>
+                  <div>{qr.payload || qr.maDress}</div>
                 </div>
               )}
               <Typography.Title level={5} style={{ marginTop: 20 }}>Lịch sử thuê mượn</Typography.Title>
