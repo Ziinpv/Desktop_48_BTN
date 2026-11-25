@@ -1,0 +1,42 @@
+appId: com.nhom24.luxeweddingstudio
+productName: LUXE WEDDING STUDIO
+copyright: Copyright © 2026 Nhóm 24 - Hoàng Long
+directories:
+  output: release
+  buildResources: assets
+files:
+  - dist/**/*
+  - electron/**/*
+  - backend/**/*
+  - database/**/*
+  - assets/**/*
+  - requirements.txt
+  - package.json
+extraResources:
+  - from: backend
+    to: backend
+  - from: database
+    to: database
+  - from: assets
+    to: assets
+win:
+  target:
+    - nsis
+  artifactName: LuxeWeddingStudio-Setup-${version}.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: LUXE WEDDING STUDIO
+  installerLanguages:
+    - vi
+    - en
+mac:
+  target:
+    - dmg
+  category: public.app-category.business
+linux:
+  target:
+    - AppImage
+  category: Office
