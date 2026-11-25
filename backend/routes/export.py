@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 from sqlalchemy.orm import Session, joinedload
@@ -9,6 +11,7 @@ from backend.services.export_service import build_pdf, invoice_pdf, rows_to_csv,
 from backend.services.rental_service import refresh_overdue, serialize_rental
 from backend.services.rules import ACTIVE_RENTAL_STATUSES
 from backend.routes.lookup import lookup_customer
+from backend.routes.reports import chart_payload
 
 router = APIRouter(prefix="/api/export", tags=["export"])
 
@@ -64,6 +67,42 @@ def _table(kind: str, db: Session):
         )
     title = "Khách hàng thuê chưa trả" if kind == "unreturned" else "Khách hàng quá hạn"
     return title, headers, rows
+
+
+@router.get("/charts.pdf")
+def export_charts(
+    fromDate: str = "",
+    toDate: str = "",
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    today = date.today()
+    start = date.fromisoformat(fromDate) if fromDate else date(today.year, today.month, 1)
+    end = date.fromisoformat(toDate) if toDate else today
+    data = chart_payload(db, start, end)
+    headers = ["Tháng", "Doanh thu dịch vụ", "Doanh thu thuê áo", "Đã thu (sổ TT)", "Lượt thuê"]
+    rows = []
+    for i, label in enumerate(data["revenue"]["labels"]):
+        rows.append(
+            [
+                label,
+                data["revenue"]["services"][i],
+                data["revenue"]["rentals"][i],
+                data["revenue"]["collected"][i],
+                data["rentalVolume"][i],
+            ]
+        )
+    totals = data["totals"]
+    rows.append(["Tổng", totals["services"], totals["rentals"], totals["collected"], totals["contracts"]])
+    for item in data["topServices"]:
+        rows.append([f"Top DV: {item['name']}", item["revenue"], item["count"], "", ""])
+    title = "Báo cáo đối soát doanh thu"
+    subtitle = f"Từ {data['fromDate']} đến {data['toDate']} • LUXE WEDDING STUDIO"
+    return _file(
+        build_pdf(title, subtitle, headers, rows, footer="Dùng để đối soát cuối tháng theo sổ thanh toán."),
+        "bao-cao-doanh-thu.pdf",
+        "application/pdf",
+    )
 
 
 @router.get("/{kind}.{fmt}")
