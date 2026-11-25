@@ -4,7 +4,7 @@ Hệ thống quản lý studio ảnh cưới — ứng dụng desktop native (El
 
 - **Nhóm:** 24
 - **Sinh viên:** Hoàng Long — MSSV 2212407
-- **Khoa:** Khoa Khoa học và Kỹ thuật Máy tính — ĐH Bách Khoa TP.HCM
+ 
 - **Đề tài số 8:** Quản lý Studio Ảnh Cưới (F1 → F8)
 
 Web demo HTML cũ được giữ tại `web-demo/` (mở `web-demo/index.html` trên trình duyệt). Ứng dụng desktop thay thế hoàn toàn phần mô phỏng in-browser.

@@ -11,6 +11,11 @@ const MAP = {
   QUA_HAN: { color: "red", vi: "Quá hạn", en: "Overdue" },
   DA_TRA: { color: "green", vi: "Đã trả", en: "Returned" },
   HUY: { color: "default", vi: "Hủy", en: "Cancelled" },
+  DUNG_HAN: { color: "green", vi: "Đúng hạn", en: "On time" },
+  TRE_HAN: { color: "red", vi: "Trễ hạn", en: "Late" },
+  TRONG_HAN: { color: "blue", vi: "Trong hạn", en: "On schedule" },
+  SAP_HET_HAN: { color: "orange", vi: "Sắp hết hạn", en: "Due soon" },
+  THANH_TOAN_PHAT: { color: "gold", vi: "Thanh toán phí", en: "Penalty paid" },
 };
 
 export default function StatusTag({ value, lang = "vi" }) {

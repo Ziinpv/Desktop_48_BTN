@@ -84,12 +84,18 @@ def _penalty_for(rental: DressRental, today: date | None = None) -> float:
 
 def serialize_rental(rental: DressRental, today: date | None = None) -> dict:
     today = today or date.today()
-    late = days_late(rental.ngay_tra_du_kien, today) if rental.trang_thai != "DA_TRA" else days_late(
-        rental.ngay_tra_du_kien, rental.ngay_tra_thuc_te or today
+    ref_date = rental.ngay_tra_thuc_te if rental.trang_thai == "DA_TRA" and rental.ngay_tra_thuc_te else today
+    late = days_late(rental.ngay_tra_du_kien, ref_date) if rental.ngay_tra_du_kien else 0
+    sap_het = (
+        rental.trang_thai == "DANG_THUE"
+        and rental.ngay_tra_du_kien is not None
+        and 0 <= (rental.ngay_tra_du_kien - today).days <= 3
     )
     items = []
+    tien_thue = 0.0
     for item in rental.items:
         dress = item.dress
+        tien_thue += item.don_gia or 0
         items.append(
             {
                 "id": item.id,
@@ -100,9 +106,25 @@ def serialize_rental(rental: DressRental, today: date | None = None) -> dict:
                 "donGia": item.don_gia,
                 "tienCoc": item.tien_coc,
                 "tinhTrangAo": item.tinh_trang_ao,
-                "phiTre": calc_late_fee(item.don_gia, late if rental.trang_thai != "DA_TRA" else 0),
+                "phiTre": calc_late_fee(item.don_gia, late),
             }
         )
+    phi_tre = _penalty_for(rental, ref_date)
+    paid_penalty = sum((h.tien_phat or 0) for h in (rental.history or []) if h.trang_thai == "THANH_TOAN_PHAT")
+    tien_coc = rental.tien_coc or 0
+    if rental.trang_thai == "DA_TRA":
+        han_tra = "DUNG_HAN" if late == 0 else "TRE_HAN"
+        da_thanh_toan = tien_coc + tien_thue + paid_penalty
+        con_no = max(0.0, phi_tre - paid_penalty)
+    elif rental.trang_thai == "QUA_HAN":
+        han_tra = "TRE_HAN"
+        da_thanh_toan = tien_coc + paid_penalty
+        con_no = max(0.0, tien_thue + phi_tre - paid_penalty)
+    else:
+        han_tra = "SAP_HET_HAN" if sap_het else "TRONG_HAN"
+        da_thanh_toan = tien_coc + paid_penalty
+        con_no = max(0.0, tien_thue + phi_tre - paid_penalty)
+
     customer = rental.customer
     return {
         "maHopDong": rental.ma_hop_dong,
@@ -112,20 +134,25 @@ def serialize_rental(rental: DressRental, today: date | None = None) -> dict:
         "diaChi": customer.dia_chi if customer else "",
         "email": customer.email if customer else "",
         "ngayThue": rental.ngay_thue.isoformat() if rental.ngay_thue else None,
+        "ngayNhan": rental.ngay_thue.isoformat() if rental.ngay_thue else None,
         "ngayTraDuKien": rental.ngay_tra_du_kien.isoformat() if rental.ngay_tra_du_kien else None,
         "ngayTraThucTe": rental.ngay_tra_thuc_te.isoformat() if rental.ngay_tra_thuc_te else None,
-        "tienCoc": rental.tien_coc,
+        "tienCoc": tien_coc,
+        "tienThue": tien_thue,
+        "daThanhToan": da_thanh_toan,
+        "tienPhatDaThu": paid_penalty,
+        "conNo": con_no,
+        "hanTra": han_tra,
         "trangThai": rental.trang_thai,
         "ghiChu": rental.ghi_chu,
         "createdAt": rental.created_at.isoformat() if rental.created_at else None,
         "createdBy": rental.created_by,
         "items": items,
         "soBo": len(items),
-        "soNgayTre": late if rental.trang_thai in ACTIVE_RENTAL_STATUSES else 0,
-        "phiTreHan": _penalty_for(rental, today) if rental.trang_thai in ACTIVE_RENTAL_STATUSES else 0,
-        "sapHetHan": rental.trang_thai == "DANG_THUE"
-        and rental.ngay_tra_du_kien
-        and 0 <= (rental.ngay_tra_du_kien - today).days <= 3,
+        "soNgayTre": late,
+        "phiTreHan": phi_tre,
+        "sapHetHan": sap_het,
+        "boAo": ", ".join(f"{i['maDress']} · {i['tenAo']}" for i in items),
     }
 
 

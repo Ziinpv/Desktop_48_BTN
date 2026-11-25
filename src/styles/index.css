@@ -157,6 +157,17 @@ h1, h2, .serif {
   background: #fef2f2 !important;
 }
 
+.customer-name-link {
+  padding: 0;
+  height: auto;
+  font-weight: 600;
+  color: #795290 !important;
+}
+
+.customer-name-link:hover {
+  text-decoration: underline;
+}
+
 .catalog-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));

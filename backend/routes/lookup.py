@@ -97,13 +97,20 @@ def lookup_customer(q: str, _: User = Depends(get_current_user), db: Session = D
             )
         rentals = (
             db.query(DressRental)
-            .options(joinedload(DressRental.items).joinedload(DressRentalItem.dress), joinedload(DressRental.customer))
+            .options(
+                joinedload(DressRental.items).joinedload(DressRentalItem.dress),
+                joinedload(DressRental.customer),
+                joinedload(DressRental.history),
+            )
             .filter(DressRental.ma_kh == c.ma_kh)
             .order_by(DressRental.ngay_thue.desc())
             .all()
         )
         rental_data = [serialize_rental(r) for r in rentals]
-        rental_total = sum(sum(i["donGia"] for i in r["items"]) for r in rental_data)
+        rental_total = sum(r.get("tienThue") or 0 for r in rental_data)
+        deposit_total = sum(r.get("tienCoc") or 0 for r in rental_data)
+        paid_total = service_total + sum(r.get("daThanhToan") or 0 for r in rental_data)
+        outstanding = sum(r.get("conNo") or 0 for r in rental_data)
         history = (
             db.query(RentalHistory)
             .join(DressRental, RentalHistory.ma_hop_dong == DressRental.ma_hop_dong)
@@ -116,6 +123,9 @@ def lookup_customer(q: str, _: User = Depends(get_current_user), db: Session = D
         item["rentals"] = rental_data
         item["serviceTotal"] = service_total
         item["rentalTotal"] = rental_total
+        item["depositTotal"] = deposit_total
+        item["paidTotal"] = paid_total
+        item["outstanding"] = outstanding
         item["grandTotal"] = service_total + rental_total
         item["transactions"] = [
             {
