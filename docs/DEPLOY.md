@@ -32,7 +32,12 @@ Khi chạy bằng Electron packaged, CSDL mặc định nằm trong `app.getPath
 npm run dist:win
 ```
 
-Phát hành file `release/LuxeWeddingStudio-Setup-1.0.0.exe`. Người dùng cài đặt, chạy shortcut Desktop. Python phải có trong PATH.
+Phát hành:
+
+- `release/LuxeWeddingStudio-Setup-1.0.0.exe` — cài đặt NSIS, shortcut Desktop
+- `release/LuxeWeddingStudio-Portable-1.0.0.exe` — chạy không cần cài
+
+API FastAPI được PyInstaller đóng gói vào `luxe-api.exe` nên máy đích không cần Python.
 
 ## 4. PostgreSQL (production)
 

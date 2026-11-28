@@ -43,10 +43,13 @@ from backend.config.database import SessionLocal  # noqa: E402
 def _setup_logging():
     settings.log_dir.mkdir(parents=True, exist_ok=True)
     handler = RotatingFileHandler(settings.log_dir / "app.log", maxBytes=2_000_000, backupCount=5, encoding="utf-8")
+    handlers = [handler]
+    if sys.stdout:
+        handlers.append(logging.StreamHandler())
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        handlers=[handler, logging.StreamHandler()],
+        handlers=handlers,
     )
 
 

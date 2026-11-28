@@ -43,6 +43,9 @@ function waitForHealth(url, timeoutMs = 40000) {
 
 function pythonCmd() {
   const win = process.platform === "win32";
+  const bundledName = win ? "luxe-api.exe" : "luxe-api";
+  const bundled = path.join(projectRoot(), "luxe-api", bundledName);
+  if (fs.existsSync(bundled)) return { cmd: bundled, args: [], cwd: path.dirname(bundled) };
   const venv = win
     ? path.join(projectRoot(), ".venv", "Scripts", "python.exe")
     : path.join(projectRoot(), ".venv", "bin", "python");
@@ -60,9 +63,12 @@ function startBackend() {
     LUXE_LOG_DIR: path.join(dataDir(), "logs"),
     PYTHONPATH: projectRoot(),
   };
-  const cwd = projectRoot();
-  const { cmd, args } = pythonCmd();
-  backendProcess = spawn(cmd, args, { cwd, env, windowsHide: true });
+  const { cmd, args, cwd } = pythonCmd();
+  backendProcess = spawn(cmd, args, { cwd: cwd || projectRoot(), env, windowsHide: true });
+  backendProcess.on("error", (err) => {
+    console.error("[api] spawn failed", err);
+    dialog.showErrorBox("Không khởi động được máy chủ", String(err.message || err));
+  });
   backendProcess.stdout.on("data", (d) => console.log(`[api] ${d}`));
   backendProcess.stderr.on("data", (d) => console.log(`[api] ${d}`));
 }
@@ -85,7 +91,17 @@ async function createWindow() {
   });
 
   if (isDev && process.env.VITE_DEV_SERVER) {
-    await mainWindow.loadURL(process.env.VITE_DEV_SERVER);
+    const url = process.env.VITE_DEV_SERVER;
+    let loaded = false;
+    for (let i = 0; i < 6 && !loaded; i += 1) {
+      try {
+        await mainWindow.loadURL(url);
+        loaded = true;
+      } catch (err) {
+        console.error(`[electron] loadURL retry ${i + 1}:`, err.message || err);
+        await new Promise((resolve) => setTimeout(resolve, 700));
+      }
+    }
     mainWindow.webContents.openDevTools({ mode: "detach" });
   } else {
     await mainWindow.loadFile(path.join(__dirname, "..", "dist", "index.html"));
@@ -146,7 +162,14 @@ app.whenReady().then(async () => {
     await waitForHealth("http://127.0.0.1:8000/api/health", 2500);
   } catch {
     startBackend();
-    await waitForHealth("http://127.0.0.1:8000/api/health");
+    try {
+      await waitForHealth("http://127.0.0.1:8000/api/health", 60000);
+    } catch (err) {
+      dialog.showErrorBox(
+        "Không kết nối được máy chủ nội bộ",
+        "Ứng dụng không khởi động được API trên cổng 8000. Hãy đóng bản đang chạy rồi mở lại.\n\n" + String(err.message || err)
+      );
+    }
   }
   await createWindow();
 });

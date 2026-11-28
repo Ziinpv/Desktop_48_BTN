@@ -80,12 +80,17 @@ npm run test:backend
 ## Build installer
 
 ```bash
-npm run dist:win      # NSIS .exe
+npm run dist:win      # NSIS installer + bản portable
 npm run dist:mac      # DMG
 npm run dist:linux    # AppImage
 ```
 
-Artifact nằm trong `release/`. Máy đích cần Python 3 để chạy API nội bộ (cùng máy).
+File cài đặt nằm trong `release/`:
+
+- `LuxeWeddingStudio-Setup-1.0.0.exe` — cài đặt, tạo shortcut Desktop
+- `LuxeWeddingStudio-Portable-1.0.0.exe` — chạy trực tiếp, không cần cài
+
+Máy đích **không cần** Python/Node. API FastAPI đã được đóng gói sẵn trong installer.
 
 ---
 

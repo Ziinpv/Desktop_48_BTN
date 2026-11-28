@@ -7,22 +7,18 @@ directories:
 files:
   - dist/**/*
   - electron/**/*
-  - backend/**/*
-  - database/**/*
-  - assets/**/*
-  - requirements.txt
   - package.json
 extraResources:
-  - from: backend
-    to: backend
-  - from: database
-    to: database
-  - from: assets
-    to: assets
+  - from: pyinstaller-dist/luxe-api
+    to: luxe-api
 win:
+  icon: assets/icon.ico
   target:
     - nsis
+    - portable
   artifactName: LuxeWeddingStudio-Setup-${version}.${ext}
+portable:
+  artifactName: LuxeWeddingStudio-Portable-${version}.${ext}
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
