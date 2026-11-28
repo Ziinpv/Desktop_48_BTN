@@ -32,6 +32,26 @@ DRESS_IMAGES = {
 }
 
 
+DEFAULT_USERS = [
+    ("admin", "Hoàng Long", "admin123", "admin"),
+    ("staff", "Nhân viên Studio", "staff123", "staff"),
+    ("cashier", "Thu ngân Studio", "cashier123", "cashier"),
+    ("kho", "Nhân viên kho áo", "kho123", "warehouse"),
+]
+
+
+def ensure_default_users(db: Session):
+    existing = {u.username for u in db.query(User).all()}
+    added = False
+    for username, full_name, password, role in DEFAULT_USERS:
+        if username in existing:
+            continue
+        db.add(User(username=username, full_name=full_name, password_hash=hash_password(password), role=role))
+        added = True
+    if added:
+        db.commit()
+
+
 def seed_if_empty(db: Session | None = None) -> bool:
     own = False
     if db is None:
@@ -39,7 +59,8 @@ def seed_if_empty(db: Session | None = None) -> bool:
         db = SessionLocal()
         own = True
     try:
-        if db.query(User).count() > 0:
+        ensure_default_users(db)
+        if db.query(ServiceType).count() > 0:
             return False
         _seed(db)
         return True
@@ -50,34 +71,6 @@ def seed_if_empty(db: Session | None = None) -> bool:
 
 def _seed(db: Session):
     today = date.today()
-    db.add_all(
-        [
-            User(
-                username="admin",
-                full_name="Hoàng Long",
-                password_hash=hash_password("admin123"),
-                role="admin",
-            ),
-            User(
-                username="staff",
-                full_name="Nhân viên Studio",
-                password_hash=hash_password("staff123"),
-                role="staff",
-            ),
-            User(
-                username="cashier",
-                full_name="Thu ngân Studio",
-                password_hash=hash_password("cashier123"),
-                role="cashier",
-            ),
-            User(
-                username="kho",
-                full_name="Nhân viên kho áo",
-                password_hash=hash_password("kho123"),
-                role="warehouse",
-            ),
-        ]
-    )
 
     types = [
         ("LDV01", "Chụp Ảnh Cưới Album", "Chụp ngoại cảnh, phim trường, studio chuyên nghiệp"),

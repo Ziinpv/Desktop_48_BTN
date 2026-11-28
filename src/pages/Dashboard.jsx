@@ -1,18 +1,39 @@
 import { useEffect, useState } from "react";
-import { Card, Statistic, Table, Typography, Spin } from "antd";
+import { Button, Card, Empty, Statistic, Table, Typography, Spin } from "antd";
 import { useNavigate } from "react-router-dom";
 import api from "../services/api";
-import { fmtDate, vnd } from "../utils/format";
+import { errText, fmtDate, vnd } from "../utils/format";
 import StatusTag from "../components/StatusTag";
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const nav = useNavigate();
 
-  useEffect(() => {
-    api.get("/api/reports/dashboard").then((r) => setData(r.data));
-  }, []);
+  const load = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const { data: payload } = await api.get("/api/reports/dashboard");
+      setData(payload);
+    } catch (e) {
+      setError(errText(e));
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => { load(); }, []);
+
+  if (loading && !data) return <Spin />;
+  if (error && !data) {
+    return (
+      <Empty description={error || "Không tải được dữ liệu"}>
+        <Button type="primary" onClick={load}>Thử lại</Button>
+      </Empty>
+    );
+  }
   if (!data) return <Spin />;
 
   return (

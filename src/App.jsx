@@ -1,8 +1,12 @@
 import { ConfigProvider, App as AntApp, theme as antTheme } from "antd";
 import viVN from "antd/locale/vi_VN";
 import enUS from "antd/locale/en_US";
-import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import { Spin } from "antd";
+import { useDispatch, useSelector } from "react-redux";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import api from "./services/api";
+import { logout } from "./store/authSlice";
 import { canAccess } from "./utils/roles";
 import AppLayout from "./layouts/AppLayout";
 import Login from "./pages/Login";
@@ -27,6 +31,27 @@ function Guard({ children }) {
   const token = useSelector((s) => s.auth.token);
   const role = useSelector((s) => s.auth.user?.role);
   const loc = useLocation();
+  const dispatch = useDispatch();
+  const [ready, setReady] = useState(!token);
+
+  useEffect(() => {
+    if (!token) {
+      setReady(true);
+      return undefined;
+    }
+    let cancelled = false;
+    api.get("/api/auth/me")
+      .then(() => { if (!cancelled) setReady(true); })
+      .catch(() => {
+        if (!cancelled) {
+          dispatch(logout());
+          setReady(true);
+        }
+      });
+    return () => { cancelled = true; };
+  }, [token, dispatch]);
+
+  if (!ready) return <div style={{ padding: 80, textAlign: "center" }}><Spin /></div>;
   if (!token) return <Navigate to="/login" replace />;
   if (!canAccess(role, loc.pathname === "" ? "/" : loc.pathname)) return <Navigate to="/" replace />;
   return children;
